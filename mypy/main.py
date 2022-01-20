@@ -498,6 +498,9 @@ def process_options(args: List[str],
         help="Show program's version number and exit",
         stdout=stdout)
 
+    general_group.add_argument(
+        '-O', '--output', metavar='FORMAT', help="Set a custom output format")
+
     config_group = parser.add_argument_group(
         title='Config file',
         description="Use a config file instead of command line arguments. "
