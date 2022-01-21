@@ -500,7 +500,9 @@ UNREACHABLE_RIGHT_OPERAND: Final = ErrorMessage(
     'Right operand of "{}" is never evaluated', codes.UNREACHABLE
 )
 EXPR_IS_ALWAYS_BOOL: Final = ErrorMessage("{} is always {}", codes.REDUNDANT_EXPR)
-IMPOSSIBLE_SUBCLASS: Final = ErrorMessage("Subclass of {} cannot exist: would have {}")
+IMPOSSIBLE_SUBCLASS: Final = ErrorMessage(
+    "Subclass of {} cannot exist: would have {}", codes.UNREACHABLE
+)
 
 # Semantic Analysis
 METHOD_ATLEAST_ONE_ARG: Final = ErrorMessage('Method must have at least one argument')
