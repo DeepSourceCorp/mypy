@@ -15,6 +15,7 @@ from mypy import errorcodes as codes
 class ErrorMessage(NamedTuple):
     value: str
     code: Optional[codes.ErrorCode] = None
+    issue: Optional[str] = None
 
     def format(self, *args: object, **kwargs: object) -> "ErrorMessage":
         return ErrorMessage(self.value.format(*args, **kwargs), code=self.code)
@@ -30,29 +31,29 @@ INVALID_TYPE_RAW_ENUM_VALUE: Final = ErrorMessage(
 )
 
 # Type checker error message constants
-NO_RETURN_VALUE_EXPECTED: Final = ErrorMessage("No return value expected", codes.RETURN_VALUE)
-MISSING_RETURN_STATEMENT: Final = ErrorMessage("Missing return statement", codes.RETURN)
-INVALID_IMPLICIT_RETURN: Final = ErrorMessage("Implicit return in function which does not return")
+NO_RETURN_VALUE_EXPECTED: Final = ErrorMessage("No return value expected", codes.RETURN_VALUE, "TYP-002")
+MISSING_RETURN_STATEMENT: Final = ErrorMessage("Missing return statement", codes.RETURN, "TYP-003")
+INVALID_IMPLICIT_RETURN: Final = ErrorMessage("Implicit return in function which does not return", issue="TYP-004")
 INCOMPATIBLE_RETURN_VALUE_TYPE: Final = ErrorMessage(
-    "Incompatible return value type", codes.RETURN_VALUE
+    "Incompatible return value type", codes.RETURN_VALUE, "TYP-005"
 )
-RETURN_VALUE_EXPECTED: Final = ErrorMessage("Return value expected", codes.RETURN_VALUE)
-NO_RETURN_EXPECTED: Final = ErrorMessage("Return statement in function which does not return")
+RETURN_VALUE_EXPECTED: Final = ErrorMessage("Return value expected", codes.RETURN_VALUE, "TYP-006")
+NO_RETURN_EXPECTED: Final = ErrorMessage("Return statement in function which does not return", issue="TYP-007")
 INVALID_EXCEPTION: Final = ErrorMessage("Exception must be derived from BaseException")
-INVALID_EXCEPTION_TYPE: Final = ErrorMessage("Exception type must be derived from BaseException")
+INVALID_EXCEPTION_TYPE: Final = ErrorMessage("Exception type must be derived from BaseException", issue="TYP-008")
 RETURN_IN_ASYNC_GENERATOR: Final = ErrorMessage(
     '"return" with value in async generator is not allowed'
 )
 INVALID_RETURN_TYPE_FOR_GENERATOR: Final = ErrorMessage(
-    'The return type of a generator function should be "Generator"' " or one of its supertypes"
+    'The return type of a generator function should be "Generator"' " or one of its supertypes", issue="TYP-009"
 )
 INVALID_RETURN_TYPE_FOR_ASYNC_GENERATOR: Final = ErrorMessage(
     'The return type of an async generator function should be "AsyncGenerator" or one of its '
-    "supertypes"
+    "supertypes", issue="TYP-010"
 )
 INVALID_GENERATOR_RETURN_ITEM_TYPE: Final = ErrorMessage(
     "The return type of a generator function must be None in"
-    " its third type parameter in Python 2"
+    " its third type parameter in Python 2", issue="TYP-011"
 )
 YIELD_VALUE_EXPECTED: Final = ErrorMessage("Yield value expected")
 INCOMPATIBLE_TYPES_IN_AWAIT: Final = ErrorMessage('Incompatible types in "await"')
@@ -73,33 +74,33 @@ MUST_HAVE_NONE_RETURN_TYPE: Final = ErrorMessage('The return type of "{}" must b
 INVALID_TUPLE_INDEX_TYPE: Final = ErrorMessage("Invalid tuple index type")
 TUPLE_INDEX_OUT_OF_RANGE: Final = ErrorMessage("Tuple index out of range")
 INVALID_SLICE_INDEX: Final = ErrorMessage("Slice index must be an integer or None")
-CANNOT_INFER_LAMBDA_TYPE: Final = ErrorMessage("Cannot infer type of lambda")
+CANNOT_INFER_LAMBDA_TYPE: Final = ErrorMessage("Cannot infer type of lambda", issue="TYP-012")
 CANNOT_ACCESS_INIT: Final = ErrorMessage('Cannot access "__init__" directly')
 NON_INSTANCE_NEW_TYPE: Final = ErrorMessage('"__new__" must return a class instance (got {})')
 INVALID_NEW_TYPE: Final = ErrorMessage('Incompatible return type for "__new__"')
-BAD_CONSTRUCTOR_TYPE: Final = ErrorMessage("Unsupported decorated constructor type")
+BAD_CONSTRUCTOR_TYPE: Final = ErrorMessage("Unsupported decorated constructor type", issue="TYP-013")
 CANNOT_ASSIGN_TO_METHOD: Final = ErrorMessage("Cannot assign to a method", codes.ASSIGNMENT)
-CANNOT_ASSIGN_TO_TYPE: Final = ErrorMessage("Cannot assign to a type")
+CANNOT_ASSIGN_TO_TYPE: Final = ErrorMessage("Cannot assign to a type", issue="TYP-014")
 INCONSISTENT_ABSTRACT_OVERLOAD: Final = ErrorMessage(
-    "Overloaded method has both abstract and non-abstract variants"
+    "Overloaded method has both abstract and non-abstract variants", issue="TYP-015"
 )
-MULTIPLE_OVERLOADS_REQUIRED: Final = ErrorMessage("Single overload definition, multiple required")
+MULTIPLE_OVERLOADS_REQUIRED: Final = ErrorMessage("Single overload definition, multiple required", issue="TYP-016")
 READ_ONLY_PROPERTY_OVERRIDES_READ_WRITE: Final = ErrorMessage(
-    "Read-only property cannot override read-write property"
+    "Read-only property cannot override read-write property", issue="TYP-017"
 )
 FORMAT_REQUIRES_MAPPING: Final = "Format requires a mapping"
 RETURN_TYPE_CANNOT_BE_CONTRAVARIANT: Final = ErrorMessage(
-    "Cannot use a contravariant type variable as return type"
+    "Cannot use a contravariant type variable as return type", issue="TYP-018"
 )
 FUNCTION_PARAMETER_CANNOT_BE_COVARIANT: Final = ErrorMessage(
-    "Cannot use a covariant type variable as a parameter"
+    "Cannot use a covariant type variable as a parameter", issue="TYP-018"
 )
 INCOMPATIBLE_IMPORT_OF: Final = "Incompatible import of"
 FUNCTION_TYPE_EXPECTED: Final = ErrorMessage(
     "Function is missing a type annotation", codes.NO_UNTYPED_DEF
 )
 ONLY_CLASS_APPLICATION: Final = ErrorMessage(
-    "Type application is only supported for generic classes"
+    "Type application is only supported for generic classes", issue="TYP-019"
 )
 RETURN_TYPE_EXPECTED: Final = ErrorMessage(
     "Function is missing a return type annotation", codes.NO_UNTYPED_DEF
@@ -108,7 +109,7 @@ ARGUMENT_TYPE_EXPECTED: Final = ErrorMessage(
     "Function is missing a type annotation for one or more arguments", codes.NO_UNTYPED_DEF
 )
 KEYWORD_ARGUMENT_REQUIRES_STR_KEY_TYPE: Final = ErrorMessage(
-    'Keyword argument only valid with "str" key type in call to "dict"'
+    'Keyword argument only valid with "str" key type in call to "dict"', issue="TYP-020"
 )
 ALL_MUST_BE_SEQ_STR: Final = ErrorMessage("Type of __all__ must be {}, not {}")
 INVALID_TYPEDDICT_ARGS: Final = ErrorMessage(
@@ -118,11 +119,11 @@ TYPEDDICT_KEY_MUST_BE_STRING_LITERAL: Final = ErrorMessage(
     "Expected TypedDict key to be string literal"
 )
 MALFORMED_ASSERT: Final = ErrorMessage("Assertion is always true, perhaps remove parentheses?")
-DUPLICATE_TYPE_SIGNATURES: Final = ErrorMessage("Function has duplicate type signatures")
+DUPLICATE_TYPE_SIGNATURES: Final = ErrorMessage("Function has duplicate type signatures", issue="TYP-021")
 DESCRIPTOR_SET_NOT_CALLABLE: Final = ErrorMessage("{}.__set__ is not callable")
 DESCRIPTOR_GET_NOT_CALLABLE: Final = ErrorMessage("{}.__get__ is not callable")
 MODULE_LEVEL_GETATTRIBUTE: Final = ErrorMessage(
-    "__getattribute__ is not valid at the module level"
+    "__getattribute__ is not valid at the module level", issue="TYP-049"
 )
 NAME_NOT_IN_SLOTS: Final = ErrorMessage(
     'Trying to assign name "{}" that is not in "__slots__" of type "{}"'
@@ -154,7 +155,7 @@ GENERIC_INSTANCE_VAR_CLASS_ACCESS: Final = ErrorMessage(
     "Access to generic instance variables via class is ambiguous"
 )
 GENERIC_CLASS_VAR_ACCESS: Final = ErrorMessage("Access to generic class variables is ambiguous")
-BARE_GENERIC: Final = ErrorMessage("Missing type parameters for generic type {}", codes.TYPE_ARG)
+BARE_GENERIC: Final = ErrorMessage("Missing type parameters for generic type {}", codes.TYPE_ARG, "TYP-022")
 IMPLICIT_GENERIC_ANY_BUILTIN: Final = ErrorMessage(
     'Implicit generic "Any". Use "{}" and specify generic parameters', codes.TYPE_ARG
 )
@@ -189,10 +190,10 @@ ELLIPSIS_WITH_OTHER_TYPEARGS: Final = ErrorMessage(
     "Ellipses cannot accompany other argument types in function type signature", codes.SYNTAX
 )
 TYPE_SIGNATURE_TOO_MANY_ARGS: Final = ErrorMessage(
-    "Type signature has too many arguments", codes.SYNTAX
+    "Type signature has too many arguments", codes.SYNTAX, "TYP-025"
 )
 TYPE_SIGNATURE_TOO_FEW_ARGS: Final = ErrorMessage(
-    "Type signature has too few arguments", codes.SYNTAX
+    "Type signature has too few arguments", codes.SYNTAX, "TYP-025"
 )
 ARG_CONSTRUCTOR_NAME_EXPECTED: Final = ErrorMessage("Expected arg constructor name", codes.SYNTAX)
 ARG_CONSTRUCTOR_TOO_MANY_ARGS: Final = ErrorMessage(
@@ -597,20 +598,21 @@ IMPOSSIBLE_SUBCLASS: Final = ErrorMessage(
 # Semantic Analysis
 METHOD_ATLEAST_ONE_ARG: Final = ErrorMessage('Method must have at least one argument')
 OVERLOAD_IMPLEMENTATION_IN_STUB: Final = ErrorMessage(
-    "An implementation for an overloaded function is not allowed in a stub file"
+    "An implementation for an overloaded function is not allowed in a stub file", issue="TYP-023",
 )
 OVERLOAD_IMPLEMENTATION_LAST: Final = ErrorMessage(
-    "The implementation for an overloaded function must come last"
+    "The implementation for an overloaded function must come last", issue="TYP-023"
 )
 OVERLOAD_IMPLEMENTATION_REQUIRED: Final = ErrorMessage(
     "An overloaded function outside a stub file must have an implementation",
     codes.NO_OVERLOAD_IMPL,
+    "TYP-023"
 )
 FINAL_DEC_ON_OVERLOAD_ONLY: Final = ErrorMessage(
-    "@final should be applied only to overload implementation"
+    "@final should be applied only to overload implementation", issue="TYP-024"
 )
 FINAL_DEC_STUB_FIRST_OVERLOAD: Final = ErrorMessage(
-    "In a stub file @final must be applied only to the first overload"
+    "In a stub file @final must be applied only to the first overload", issue="TYP-024"
 )
 DECORATED_PROPERTY_UNSUPPORTED: Final = ErrorMessage("Decorated property not supported")
 UNEXPECTED_PROPERTY_DEFN: Final = ErrorMessage('Unexpected definition for property "{}"')
@@ -627,17 +629,17 @@ BASES_MUST_HAVE_SINGLE_GENERIC_OR_PROTOCOL: Final = ErrorMessage(
     'Only single Generic[...] or Protocol[...] can be in bases'
 )
 DUPLICATE_TYPEVARS_IN_GENERIC_OR_PROTOCOL: Final = ErrorMessage(
-    "Duplicate type variables in Generic[...] or Protocol[...]"
+    "Duplicate type variables in Generic[...] or Protocol[...]", issue="TYP-026"
 )
 GENERIC_PROTOCOL_NOT_ALL_TYPEVARS: Final = ErrorMessage(
-    "If Generic[...] or Protocol[...] is present it should list all type variables"
+    "If Generic[...] or Protocol[...] is present it should list all type variables", issue="TYP-027"
 )
 FREE_TYPEVAR_EXPECTED: Final = ErrorMessage('Free type variable expected in {}[...]')
 UNSUPPORTED_DYNAMIC_BASE_CLASS: Final = ErrorMessage('Unsupported dynamic base class{}')
 INVALID_BASE_CLASS: Final = ErrorMessage('Invalid base class{}')
 CANNOT_SUBCLASS_NEWTYPE: Final = ErrorMessage('Cannot subclass "NewType"')
 CANNOT_SUBCLASS_ANY_NAMED: Final = ErrorMessage('Class cannot subclass "{}" (has type "Any")')
-CANNOT_SUBCLASS_ANY: Final = ErrorMessage('Class cannot subclass value of type "Any"')
+CANNOT_SUBCLASS_ANY: Final = ErrorMessage('Class cannot subclass value of type "Any"', issue="TYP-028")
 INCOMPATIBLE_BASES: Final = ErrorMessage("Class has two incompatible bases derived from tuple")
 CANNOT_DETERMINE_MRO: Final = ErrorMessage(
     'Cannot determine consistent method resolution order (MRO) for "{}"'
@@ -678,9 +680,9 @@ NAMEDTUPLE_INCORRECT_FIRST_ARG: Final = ErrorMessage(
 TYPEDDICT_ATTRIBUTE_UNSUPPORTED: Final = ErrorMessage(
     "TypedDict type as attribute is not supported"
 )
-FINAL_ATMOST_ONE_ARG: Final = ErrorMessage("Final[...] takes at most one type argument")
+FINAL_ATMOST_ONE_ARG: Final = ErrorMessage("Final[...] takes at most one type argument", issue="TYP-029")
 FINAL_INITIALIZER_REQUIRED: Final = ErrorMessage(
-    "Type in Final[...] can only be omitted if there is an initializer"
+    "Type in Final[...] can only be omitted if there is an initializer", issue="TYP-030"
 )
 FINAL_CLASSVAR_DISALLOWED: Final = ErrorMessage(
     "Variable should not be annotated with both ClassVar and Final"
@@ -694,15 +696,15 @@ FINAL_ONLY_IN_CLASS_BODY_OR_INIT: Final = ErrorMessage(
     "Can only declare a final attribute in class body or __init__"
 )
 PROTOCOL_MEMBERS_MUST_BE_TYPED: Final = ErrorMessage(
-    'All protocol members must have explicitly declared types'
+    'All protocol members must have explicitly declared types', issue="TYP-031"
 )
 MULTIPLE_TYPES_WITHOUT_EXPLICIT_TYPE: Final = ErrorMessage(
     'Cannot assign multiple types to name "{}" without an explicit "Type[...]" annotation'
 )
 TYPE_DECLARATION_IN_ASSIGNMENT: Final = ErrorMessage(
-    'Type cannot be declared in assignment to non-self attribute'
+    'Type cannot be declared in assignment to non-self attribute', issue="TYP-032"
 )
-UNEXPECTED_TYPE_DECLARATION: Final = ErrorMessage('Unexpected type declaration')
+UNEXPECTED_TYPE_DECLARATION: Final = ErrorMessage('Unexpected type declaration', issue="TYP-033")
 STAR_ASSIGNMENT_TARGET_LIST_OR_TUPLE: Final = ErrorMessage(
     'Starred assignment target must be in a list or tuple'
 )
@@ -717,7 +719,7 @@ STARTYPE_ONLY_FOR_STAR_EXPRESSIONS: Final = ErrorMessage(
 )
 INCOMPATIBLE_TUPLE_ITEM_COUNT: Final = ErrorMessage('Incompatible number of tuple items')
 TUPLE_TYPE_EXPECTED: Final = ErrorMessage('Tuple type expected for multiple variables')
-CANNOT_DECLARE_TYPE_OF_TYPEVAR: Final = ErrorMessage("Cannot declare the type of a type variable")
+CANNOT_DECLARE_TYPE_OF_TYPEVAR: Final = ErrorMessage("Cannot declare the type of a type variable", issue="TYP-034")
 REDEFINE_AS_TYPEVAR: Final = ErrorMessage('Cannot redefine "{}" as a type variable')
 TYPEVAR_CALL_TOO_FEW_ARGS: Final = ErrorMessage("Too few arguments for {}()")
 TYPEVAR_CALL_EXPECTED_STRING_LITERAL: Final = ErrorMessage(
@@ -760,10 +762,10 @@ BREAK_OUTSIDE_LOOP: Final = ErrorMessage('"break" outside loop')
 CONTINUE_OUTSIDE_LOOP: Final = ErrorMessage('"continue" outside loop')
 WITH_HAS_NO_TARGETS: Final = ErrorMessage('Invalid type comment: "with" statement has no targets')
 WITH_INCOMPATIBLE_TARGET_COUNT: Final = ErrorMessage(
-    'Incompatible number of types for "with" targets'
+    'Incompatible number of types for "with" targets', issue="TYP-036"
 )
 WITH_MULTIPLE_TYPES_EXPECTED: Final = ErrorMessage(
-    'Multiple types expected for multiple "with" targets'
+    'Multiple types expected for multiple "with" targets', issue="TYP-036"
 )
 INVALID_DELETE_TARGET: Final = ErrorMessage('Invalid delete target')
 NAME_IS_NONLOCAL_AND_GLOBAL: Final = ErrorMessage('Name "{}" is nonlocal and global')
@@ -783,14 +785,14 @@ YIELD_OUTSIDE_FUNC: Final = ErrorMessage('"yield" outside function')
 YIELD_FROM_OUTSIDE_FUNC: Final = ErrorMessage('"yield from" outside function')
 YIELD_IN_ASYNC_FUNC: Final = ErrorMessage('"yield" in async function')
 YIELD_FROM_IN_ASYNC_FUNC: Final = ErrorMessage('"yield from" in async function')
-CAST_TARGET_IS_NOT_TYPE: Final = ErrorMessage('Cast target is not a type')
+CAST_TARGET_IS_NOT_TYPE: Final = ErrorMessage('Cast target is not a type', issue="TYP-037")
 ANY_CALL_UNSUPPORTED: Final = ErrorMessage(
-    'Any(...) is no longer supported. Use cast(Any, ...) instead'
+    'Any(...) is no longer supported. Use cast(Any, ...) instead', issue="TYP-038"
 )
-PROMOTE_ARG_EXPECTED_TYPE: Final = ErrorMessage('Argument 1 to _promote is not a type')
+PROMOTE_ARG_EXPECTED_TYPE: Final = ErrorMessage('Argument 1 to _promote is not a type', issue="TYP-039")
 ARG_COUNT_MISMATCH: Final = ErrorMessage('"{}" expects {} argument{}')
 POS_ARG_COUNT_MISMATCH: Final = ErrorMessage('"{}" must be called with {} positional argument{}')
-TYPE_EXPECTED_IN_BRACKETS: Final = ErrorMessage('Type expected within [...]')
+TYPE_EXPECTED_IN_BRACKETS: Final = ErrorMessage('Type expected within [...]', issue="TYP-040")
 AWAIT_OUTSIDE_FUNC: Final = ErrorMessage('"await" outside function')
 AWAIT_OUTSIDE_COROUTINE: Final = ErrorMessage('"await" outside coroutine ("async def")')
 CANNOT_RESOLVE_NAME: Final = ErrorMessage('Cannot resolve {} "{}" (possible cyclic definition)')
@@ -935,11 +937,11 @@ NO_BOUND_TYPEVAR_GENERIC_ALIAS: Final = ErrorMessage(
 )
 TYPEVAR_USED_WITH_ARGS: Final = ErrorMessage('Type variable "{}" used with arguments')
 ONLY_OUTERMOST_FINAL: Final = ErrorMessage(
-    "Final can be only used as an outermost qualifier in a variable annotation"
+    "Final can be only used as an outermost qualifier in a variable annotation", issue="TYP-045"
 )
 BUILTIN_TUPLE_NOT_DEFINED: Final = ErrorMessage('Name "tuple" is not defined')
-SINGLE_TYPE_ARG: Final = ErrorMessage("{} must have exactly one type argument")
-INVALID_NESTED_CLASSVAR: Final = ErrorMessage("Invalid type: ClassVar nested inside other type")
+SINGLE_TYPE_ARG: Final = ErrorMessage("{} must have exactly one type argument", issue="TYP-046")
+INVALID_NESTED_CLASSVAR: Final = ErrorMessage("Invalid type: ClassVar nested inside other type", issue="TYP-047")
 CLASSVAR_ATMOST_ONE_TYPE_ARG: Final = ErrorMessage(
     "ClassVar[...] must have at most one type argument"
 )
@@ -956,8 +958,8 @@ REQUIRED_SINGLE_TYPE_ARG: Final = ErrorMessage("Required[] must have exactly one
 NOTREQUIRED_SINGLE_TYPE_ARG: Final = ErrorMessage(
     "NotRequired[] must have exactly one type argument"
 )
-GENERIC_TUPLE_UNSUPPORTED: Final = ErrorMessage("Generic tuple types not supported")
-GENERIC_TYPED_DICT_UNSUPPORTED: Final = ErrorMessage("Generic TypedDict types not supported")
+GENERIC_TUPLE_UNSUPPORTED: Final = ErrorMessage("Generic tuple types not supported", issue="TYP-044")
+GENERIC_TYPED_DICT_UNSUPPORTED: Final = ErrorMessage("Generic TypedDict types not supported", issue="TYP-044")
 VARIABLE_NOT_VALID_TYPE: Final = ErrorMessage(
     'Variable "{}" is not valid as a type', codes.VALID_TYPE
 )
@@ -981,7 +983,7 @@ INVALID_TYPE_USE_LITERAL: Final = ErrorMessage(
 INVALID_LITERAL_TYPE: Final = ErrorMessage(
     "Invalid type: {} literals cannot be used as a type", codes.VALID_TYPE
 )
-INVALID_ANNOTATION: Final = ErrorMessage("Invalid type comment or annotation", codes.VALID_TYPE)
+INVALID_ANNOTATION: Final = ErrorMessage("Invalid type comment or annotation", codes.VALID_TYPE, "TYP-043")
 PIPE_UNION_REQUIRES_PY310: Final = ErrorMessage("X | Y syntax for unions requires Python 3.10")
 UNEXPECTED_ELLIPSIS: Final = ErrorMessage('Unexpected "..."')
 CALLABLE_INVALID_FIRST_ARG: Final = ErrorMessage(
@@ -992,7 +994,7 @@ CALLABLE_INVALID_ARGS: Final = ErrorMessage(
 )
 INVALID_ARG_CONSTRUCTOR: Final = ErrorMessage('Invalid argument constructor "{}"')
 ARGS_SHOULD_NOT_HAVE_NAMES: Final = ErrorMessage("{} arguments should not have names")
-LITERAL_AT_LEAST_ONE_ARG: Final = ErrorMessage("Literal[...] must have at least one parameter")
+LITERAL_AT_LEAST_ONE_ARG: Final = ErrorMessage("Literal[...] must have at least one parameter", issue="TYP-042")
 LITERAL_INDEX_CANNOT_BE_ANY: Final = ErrorMessage(
     'Parameter {} of Literal[...] cannot be of type "Any"'
 )
@@ -1000,7 +1002,7 @@ LITERAL_INDEX_INVALID_TYPE: Final = ErrorMessage(
     'Parameter {} of Literal[...] cannot be of type "{}"'
 )
 LITERAL_INVALID_EXPRESSION: Final = ErrorMessage(
-    "Invalid type: Literal[...] cannot contain arbitrary expressions"
+    "Invalid type: Literal[...] cannot contain arbitrary expressions", issue="TYP-041"
 )
 LITERAL_INVALID_PARAMETER: Final = ErrorMessage("Parameter {} of Literal[...] is invalid")
 TYPEVAR_BOUND_BY_OUTER_CLASS: Final = ErrorMessage('Type variable "{}" is bound by an outer class')
@@ -1008,7 +1010,7 @@ TYPE_ARG_COUNT_MISMATCH: Final = ErrorMessage('"{}" expects {}, but {} given', c
 TYPE_ALIAS_ARG_COUNT_MISMATCH: Final = ErrorMessage(
     "Bad number of arguments for type alias, expected: {}, given: {}"
 )
-INVALID_TYPE_ALIAS: Final = ErrorMessage("Invalid type alias: expression is not a valid type")
+INVALID_TYPE_ALIAS: Final = ErrorMessage("Invalid type alias: expression is not a valid type", issue="TYP-048")
 CANNOT_RESOLVE_TYPE: Final = ErrorMessage('Cannot resolve {} "{}" (possible cyclic definition)')
 UNION_SYNTAX_REQUIRES_PY310: Final = ErrorMessage("X | Y syntax for unions requires Python 3.10")
 
@@ -1063,7 +1065,7 @@ CANNOT_OVERRIDE_CLASS_VAR: Final = ErrorMessage(
     'Cannot override class variable (previously declared on base class "{}") with instance '
     "variable"
 )
-CLASS_VAR_WITH_TYPEVARS: Final = ErrorMessage('ClassVar cannot contain type variables')
+CLASS_VAR_WITH_TYPEVARS: Final = ErrorMessage('ClassVar cannot contain type variables', issue="TYP-047")
 CLASS_VAR_OUTSIDE_OF_CLASS: Final = 'ClassVar can only be used for assignments in class body'
 
 # Protocol
