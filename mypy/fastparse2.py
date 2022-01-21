@@ -179,7 +179,7 @@ class ASTConverter:
 
     def fail(self, msg: ErrorMessage, line: int, column: int, blocker: bool = True) -> None:
         if blocker or not self.options.ignore_errors:
-            self.errors.report(line, column, msg.value, blocker=blocker, code=msg.code)
+            self.errors.report(line, column, msg.value, blocker=blocker, code=msg.code, issue=msg.issue)
 
     def visit(self, node: Optional[AST]) -> Any:  # same as in typed_ast stub
         if node is None:

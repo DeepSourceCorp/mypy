@@ -53,6 +53,7 @@ class ErrorInfo:
 
     # The error code.
     code: Optional[ErrorCode] = None
+    issue: Optional[str] = None
 
     # If True, we should halt build after the file that generated this error.
     blocker = False
@@ -85,6 +86,7 @@ class ErrorInfo:
                  severity: str,
                  message: str,
                  code: Optional[ErrorCode],
+                 issue: Optional[str],
                  blocker: bool,
                  only_once: bool,
                  allow_dups: bool,
@@ -100,6 +102,7 @@ class ErrorInfo:
         self.severity = severity
         self.message = message
         self.code = code
+        self.issue = issue
         self.blocker = blocker
         self.only_once = only_once
         self.allow_dups = allow_dups
@@ -115,7 +118,8 @@ ErrorTuple = Tuple[Optional[str],
                    str,
                    str,
                    bool,
-                   Optional[ErrorCode]]
+                   Optional[ErrorCode],
+                   Optional[str]]
 
 
 class Errors:
@@ -293,6 +297,7 @@ class Errors:
                column: Optional[int],
                message: str,
                code: Optional[ErrorCode] = None,
+               issue: Optional[str] = None,
                *,
                blocker: bool = False,
                severity: str = 'error',
@@ -342,7 +347,7 @@ class Errors:
         code = code or (codes.MISC if not blocker else None)
 
         info = ErrorInfo(self.import_context(), file, self.current_module(), type,
-                         function, line, column, severity, message, code,
+                         function, line, column, severity, message, code, issue,
                          blocker, only_once, allow_dups,
                          origin=(self.file, origin_line, end_line),
                          target=self.current_target())
@@ -419,6 +424,7 @@ class Errors:
             severity='note',
             message=message,
             code=None,
+            issue=None,
             blocker=False,
             only_once=True,
             allow_dups=False,
@@ -483,7 +489,7 @@ class Errors:
                 # Don't use report since add_error_info will ignore the error!
                 info = ErrorInfo(self.import_context(), file, self.current_module(), None,
                                  None, line, -1, 'error', message,
-                                 None, False, False, False)
+                                 None, None, False, False, False)
                 self._add_error_info(file, info)
 
     def num_messages(self) -> int:
@@ -542,7 +548,7 @@ class Errors:
         error_info = [info for info in error_info if not info.hidden]
         errors = self.render_messages(self.sort_messages(error_info))
         errors = self.remove_duplicates(errors)
-        for file, line, column, severity, message, allow_dups, code in errors:
+        for file, line, column, severity, message, allow_dups, code, issue in errors:
             s = ''
             if file is not None:
                 if self.show_column_numbers and line >= 0 and column >= 0:
@@ -657,7 +663,7 @@ class Errors:
                     # simplify path.
                     path = remove_path_prefix(path, self.ignore_prefix)
                     result.append((None, -1, -1, 'note',
-                                   fmt.format(path, line), e.allow_dups, None))
+                                   fmt.format(path, line), e.allow_dups, None, None))
                     i -= 1
 
             file = self.simplify_path(e.file)
@@ -669,32 +675,32 @@ class Errors:
                     e.type != prev_type):
                 if e.function_or_member is None:
                     if e.type is None:
-                        result.append((file, -1, -1, 'note', 'At top level:', e.allow_dups, None))
+                        result.append((file, -1, -1, 'note', 'At top level:', e.allow_dups, None, None))
                     else:
                         result.append((file, -1, -1, 'note', 'In class "{}":'.format(
-                            e.type), e.allow_dups, None))
+                            e.type), e.allow_dups, None, None))
                 else:
                     if e.type is None:
                         result.append((file, -1, -1, 'note',
                                        'In function "{}":'.format(
-                                           e.function_or_member), e.allow_dups, None))
+                                           e.function_or_member), e.allow_dups, None, None))
                     else:
                         result.append((file, -1, -1, 'note',
                                        'In member "{}" of class "{}":'.format(
-                                           e.function_or_member, e.type), e.allow_dups, None))
+                                           e.function_or_member, e.type), e.allow_dups, None, None))
             elif e.type != prev_type:
                 if e.type is None:
-                    result.append((file, -1, -1, 'note', 'At top level:', e.allow_dups, None))
+                    result.append((file, -1, -1, 'note', 'At top level:', e.allow_dups, None, None))
                 else:
                     result.append((file, -1, -1, 'note',
-                                   'In class "{}":'.format(e.type), e.allow_dups, None))
+                                   'In class "{}":'.format(e.type), e.allow_dups, None, None))
 
             if isinstance(e.message, ErrorMessage):
                 result.append(
-                    (file, e.line, e.column, e.severity, e.message.value, e.allow_dups, e.code))
+                    (file, e.line, e.column, e.severity, e.message.value, e.allow_dups, e.message.code, e.message.issue))
             else:
                 result.append(
-                    (file, e.line, e.column, e.severity, e.message, e.allow_dups, e.code))
+                    (file, e.line, e.column, e.severity, e.message, e.allow_dups, e.code, e.issue))
 
             prev_import_context = e.import_ctx
             prev_function_or_member = e.function_or_member
@@ -879,13 +885,15 @@ class MypyError:
                  column: int,
                  message: str,
                  hint: str,
-                 errorcode: Optional[ErrorCode]) -> None:
+                 errorcode: Optional[ErrorCode],
+                 issue: Optional[str]) -> None:
         self.file_path = file_path
         self.line = line
         self.column = column
         self.message = message
         self.hint = hint
         self.errorcode = errorcode
+        self.issue = issue
 
 
 # (file_path, line, column)
@@ -897,7 +905,7 @@ def create_errors(error_tuples: List[ErrorTuple]) -> List[MypyError]:
     latest_error_at_location: Dict[_ErrorLocation, MypyError] = {}
 
     for error_tuple in error_tuples:
-        file_path, line, column, severity, message, _, errorcode = error_tuple
+        file_path, line, column, severity, message, _, errorcode, issue = error_tuple
         if file_path is None:
             continue
 
@@ -915,7 +923,7 @@ def create_errors(error_tuples: List[ErrorTuple]) -> List[MypyError]:
                 error.hint += '\n' + message
 
         else:
-            error = MypyError(file_path, line, column, message, "", errorcode)
+            error = MypyError(file_path, line, column, message, "", errorcode, issue)
             errors.append(error)
             error_location = (file_path, line, column)
             latest_error_at_location[error_location] = error

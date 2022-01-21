@@ -248,7 +248,7 @@ def parse_type_comment(type_comment: str,
         if errors is not None:
             stripped_type = type_comment.split("#", 2)[0].strip()
             err_msg = message_registry.TYPE_COMMENT_SYNTAX_ERROR_VALUE.format(stripped_type)
-            errors.report(line, column, err_msg.value, blocker=True, code=err_msg.code)
+            errors.report(line, column, err_msg.value, blocker=True, code=err_msg.code, issue=err_msg.issue)
             return None, None
         else:
             raise
@@ -261,7 +261,7 @@ def parse_type_comment(type_comment: str,
             if ignored is None:
                 if errors is not None:
                     err_msg = message_registry.INVALID_TYPE_IGNORE
-                    errors.report(line, column, err_msg.value, code=err_msg.code)
+                    errors.report(line, column, err_msg.value, code=err_msg.code, issue=err_msg.issue)
                 else:
                     raise SyntaxError
         else:
@@ -344,7 +344,7 @@ class ASTConverter:
              column: int,
              blocker: bool = True) -> None:
         if blocker or not self.options.ignore_errors:
-            self.errors.report(line, column, msg.value, blocker=blocker, code=msg.code)
+            self.errors.report(line, column, msg.value, blocker=blocker, code=msg.code, issue=msg.issue)
 
     def visit(self, node: Optional[AST]) -> Any:
         if node is None:
@@ -1455,7 +1455,7 @@ class TypeConverter:
 
     def fail(self, msg: ErrorMessage, line: int, column: int) -> None:
         if self.errors:
-            self.errors.report(line, column, msg.value, blocker=True, code=msg.code)
+            self.errors.report(line, column, msg.value, blocker=True, code=msg.code, issue=msg.issue)
 
     def note(self, msg: str, line: int, column: int) -> None:
         if self.errors:

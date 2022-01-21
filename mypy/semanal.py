@@ -5128,7 +5128,7 @@ class SemanticAnalyzer(NodeVisitor[None],
             return
         # In case it's a bug and we don't really have context
         assert ctx is not None, msg
-        self.errors.report(ctx.get_line(), ctx.get_column(), msg.value, code=msg.code,
+        self.errors.report(ctx.get_line(), ctx.get_column(), msg.value, code=msg.code, issue=msg.issue,
                            blocker=blocker)
 
     def note(self, msg: str, ctx: Context, code: Optional[ErrorCode] = None) -> None:

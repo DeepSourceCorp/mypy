@@ -22,4 +22,5 @@ class JSONFormatter(ErrorFormatter):
             'message': error.message,
             'hint': error.hint,
             'code': None if error.errorcode is None else error.errorcode.code,
+            'issue': error.issue,
         })

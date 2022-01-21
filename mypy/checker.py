@@ -5041,8 +5041,10 @@ class TypeChecker(NodeVisitor[None], CheckerPluginInterface):
         if isinstance(msg, ErrorMessage):
             msg_text = msg.value
             code = msg.code
+            issue = msg.issue
         else:
             msg_text = msg
+            issue = None
         subtype = get_proper_type(subtype)
         supertype = get_proper_type(supertype)
         if self.msg.try_report_long_tuple_assignment_error(subtype, supertype, context, msg_text,
@@ -5066,7 +5068,7 @@ class TypeChecker(NodeVisitor[None], CheckerPluginInterface):
         if extra_info:
             msg_text += ' (' + ', '.join(extra_info) + ')'
 
-        self.fail(ErrorMessage(msg_text, code=code), context)
+        self.fail(ErrorMessage(msg_text, code=code, issue=issue), context)
         for note in notes:
             self.msg.note(note, context, code=code)
         if note_msg:

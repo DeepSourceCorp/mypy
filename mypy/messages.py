@@ -171,6 +171,7 @@ class MessageBuilder:
                severity: str,
                *,
                code: Optional[ErrorCode] = None,
+               issue: Optional[str] = None,
                file: Optional[str] = None,
                origin: Optional[Context] = None,
                offset: int = 0,
@@ -187,7 +188,7 @@ class MessageBuilder:
                                context.get_column() if context else -1,
                                msg, severity=severity, file=file, offset=offset,
                                origin_line=origin.get_line() if origin else None,
-                               end_line=end_line, code=code, allow_dups=allow_dups)
+                               end_line=end_line, code=code, issue=issue, allow_dups=allow_dups)
 
     def fail(self,
              msg: ErrorMessage,
@@ -197,7 +198,7 @@ class MessageBuilder:
              origin: Optional[Context] = None,
              allow_dups: bool = False) -> None:
         """Report an error message (unless disabled)."""
-        self.report(msg.value, context, 'error', code=msg.code, file=file,
+        self.report(msg.value, context, 'error', code=msg.code, issue=msg.issue, file=file,
                     origin=origin, allow_dups=allow_dups)
 
     def note(self,
