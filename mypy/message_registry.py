@@ -27,7 +27,8 @@ INCOMPATIBLE_TYPES_IN_ASSIGNMENT: Final = "Incompatible types in assignment"
 
 # Invalid types
 INVALID_TYPE_RAW_ENUM_VALUE: Final = ErrorMessage(
-    "Invalid type: try using Literal[{}.{}] instead?"
+    "Invalid type: try using Literal[{}.{}] instead?",
+    issue="TYP-059"
 )
 
 # Type checker error message constants
@@ -57,7 +58,7 @@ INVALID_GENERATOR_RETURN_ITEM_TYPE: Final = ErrorMessage(
 )
 YIELD_VALUE_EXPECTED: Final = ErrorMessage("Yield value expected")
 INCOMPATIBLE_TYPES_IN_AWAIT: Final = ErrorMessage('Incompatible types in "await"')
-INCOMPATIBLE_REDEFINITION: Final = ErrorMessage("Incompatible redefinition")
+INCOMPATIBLE_REDEFINITION: Final = ErrorMessage("Incompatible redefinition", issue="TYP-053")
 INCOMPATIBLE_TYPES_IN_ASYNC_WITH_AENTER: Final = ErrorMessage(
     'Incompatible types in "async with" for "__aenter__"'
 )
@@ -70,8 +71,11 @@ INCOMPATIBLE_TYPES_IN_YIELD: Final = ErrorMessage('Incompatible types in "yield"
 INCOMPATIBLE_TYPES_IN_YIELD_FROM: Final = ErrorMessage('Incompatible types in "yield from"')
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION: Final = "Incompatible types in string interpolation"
 INCOMPATIBLE_TYPES_IN_CAPTURE: Final = ErrorMessage('Incompatible types in capture pattern')
-MUST_HAVE_NONE_RETURN_TYPE: Final = ErrorMessage('The return type of "{}" must be None')
-INVALID_TUPLE_INDEX_TYPE: Final = ErrorMessage("Invalid tuple index type")
+MUST_HAVE_NONE_RETURN_TYPE: Final = ErrorMessage(
+    'The return type of "{}" must be None',
+    issue="TYP-055",
+)
+INVALID_TUPLE_INDEX_TYPE: Final = ErrorMessage("Invalid tuple index type", issue="TYP-054")
 TUPLE_INDEX_OUT_OF_RANGE: Final = ErrorMessage("Tuple index out of range")
 INVALID_SLICE_INDEX: Final = ErrorMessage("Slice index must be an integer or None")
 CANNOT_INFER_LAMBDA_TYPE: Final = ErrorMessage("Cannot infer type of lambda", issue="TYP-012")
@@ -97,21 +101,23 @@ FUNCTION_PARAMETER_CANNOT_BE_COVARIANT: Final = ErrorMessage(
 )
 INCOMPATIBLE_IMPORT_OF: Final = "Incompatible import of"
 FUNCTION_TYPE_EXPECTED: Final = ErrorMessage(
-    "Function is missing a type annotation", codes.NO_UNTYPED_DEF
+    "Function is missing a type annotation", codes.NO_UNTYPED_DEF, "TYP-051"
 )
 ONLY_CLASS_APPLICATION: Final = ErrorMessage(
     "Type application is only supported for generic classes", issue="TYP-019"
 )
 RETURN_TYPE_EXPECTED: Final = ErrorMessage(
-    "Function is missing a return type annotation", codes.NO_UNTYPED_DEF
+    "Function is missing a return type annotation", codes.NO_UNTYPED_DEF, "TYP-051"
 )
 ARGUMENT_TYPE_EXPECTED: Final = ErrorMessage(
-    "Function is missing a type annotation for one or more arguments", codes.NO_UNTYPED_DEF
+    "Function is missing a type annotation for one or more arguments",
+    codes.NO_UNTYPED_DEF,
+    "TYP-051",
 )
 KEYWORD_ARGUMENT_REQUIRES_STR_KEY_TYPE: Final = ErrorMessage(
     'Keyword argument only valid with "str" key type in call to "dict"', issue="TYP-020"
 )
-ALL_MUST_BE_SEQ_STR: Final = ErrorMessage("Type of __all__ must be {}, not {}")
+ALL_MUST_BE_SEQ_STR: Final = ErrorMessage("Type of __all__ must be {}, not {}", issue="TYP-056")
 INVALID_TYPEDDICT_ARGS: Final = ErrorMessage(
     "Expected keyword arguments, {...}, or dict(...) in TypedDict constructor"
 )
@@ -144,7 +150,7 @@ FUNCTION_ALWAYS_TRUE: Final = ErrorMessage(
 )
 NOT_CALLABLE: Final = '{} not callable'
 PYTHON2_PRINT_FILE_TYPE: Final = ErrorMessage(
-    'Argument "file" to "print" has incompatible type "{}"; expected "{}"'
+    'Argument "file" to "print" has incompatible type "{}"; expected "{}"', issue="TYP-050"
 )
 ENUM_EXTEND_EXISTING_MEMBERS: Final = ErrorMessage(
     'Cannot extend enum with existing members: "{}"'
@@ -162,10 +168,11 @@ IMPLICIT_GENERIC_ANY_BUILTIN: Final = ErrorMessage(
 
 # TypeVar
 INCOMPATIBLE_TYPEVAR_VALUE: Final = ErrorMessage(
-    'Value of type variable "{}" of {} cannot be {}', codes.TYPE_VAR
+    'Value of type variable "{}" of {} cannot be {}', codes.TYPE_VAR, "TYP-057"
 )
 CANNOT_USE_TYPEVAR_AS_EXPRESSION: Final = ErrorMessage(
-    'Type variable "{}.{}" cannot be used as an expression'
+    'Type variable "{}.{}" cannot be used as an expression',
+    issue="TYP-058",
 )
 INVALID_TYPEVAR_AS_TYPEARG: Final = ErrorMessage(
     'Type variable "{}" not valid as type argument value for "{}"', codes.TYPE_VAR
@@ -306,19 +313,23 @@ FORMAT_STR_ASCII_SPECIFIER_PY3: Final = ErrorMessage(
 # strings from messages.py
 MEMBER_NOT_ASSIGNABLE: Final = ErrorMessage('Member "{}" is not assignable')
 UNSUPPORTED_OPERAND_FOR_IN: Final = ErrorMessage(
-    "Unsupported right operand type for in ({})", codes.OPERATOR
+    "Unsupported right operand type for in ({})", codes.OPERATOR, "TYP-052"
 )
 UNSUPPORTED_OPERAND_FOR_UNARY_MINUS: Final = ErrorMessage(
-    "Unsupported operand type for unary - ({})", codes.OPERATOR
+    "Unsupported operand type for unary - ({})", codes.OPERATOR, "TYP-052"
 )
 UNSUPPORTED_OPERAND_FOR_UNARY_PLUS: Final = ErrorMessage(
-    "Unsupported operand type for unary + ({})", codes.OPERATOR
+    "Unsupported operand type for unary + ({})", codes.OPERATOR, "TYP-052"
 )
 UNSUPPORTED_OPERAND_FOR_INVERT: Final = ErrorMessage(
-    "Unsupported operand type for ~ ({})", codes.OPERATOR
+    "Unsupported operand type for ~ ({})", codes.OPERATOR, "TYP-052"
 )
-TYPE_NOT_GENERIC_OR_INDEXABLE: Final = ErrorMessage("The type {} is not generic and not indexable")
-TYPE_NOT_INDEXABLE: Final = ErrorMessage("Value of type {} is not indexable", codes.INDEX)
+TYPE_NOT_GENERIC_OR_INDEXABLE: Final = ErrorMessage(
+    "The type {} is not generic and not indexable", issue="TYP-062"
+)
+TYPE_NOT_INDEXABLE: Final = ErrorMessage(
+    "Value of type {} is not indexable", codes.INDEX, "TYP-062"
+)
 UNSUPPORTED_TARGET_INDEXED_ASSIGNMENT: Final = ErrorMessage(
     "Unsupported target for indexed assignment ({})", codes.INDEX
 )
@@ -338,55 +349,56 @@ TYPEVAR_UPPER_BOUND_HAS_NO_ATTRIBUTE: Final = ErrorMessage(
     'Item {} of the upper bound {} of type variable {} has no attribute "{}"{}', codes.UNION_ATTR
 )
 UNSUPPORTED_OPERANDS_LIKELY_UNION: Final = ErrorMessage(
-    "Unsupported operand types for {} (likely involving Union)", codes.OPERATOR
+    "Unsupported operand types for {} (likely involving Union)", codes.OPERATOR, "TYP-052"
 )
 UNSUPPORTED_OPERANDS: Final = ErrorMessage(
-    "Unsupported operand types for {} ({} and {})", codes.OPERATOR
+    "Unsupported operand types for {} ({} and {})", codes.OPERATOR, "TYP-052"
 )
 UNSUPPORTED_LEFT_OPERAND_TYPE_UNION: Final = ErrorMessage(
-    "Unsupported left operand type for {} (some union)", codes.OPERATOR
+    "Unsupported left operand type for {} (some union)", codes.OPERATOR, "TYP-052"
 )
 UNSUPPORTED_LEFT_OPERAND_TYPE: Final = ErrorMessage(
-    "Unsupported left operand type for {} ({})", codes.OPERATOR
+    "Unsupported left operand type for {} ({})", codes.OPERATOR, "TYP-052"
 )
 UNTYPED_FUNCTION_CALL: Final = ErrorMessage(
-    "Call to untyped function {} in typed context", codes.NO_UNTYPED_CALL
+    "Call to untyped function {} in typed context", codes.NO_UNTYPED_CALL, "TYP-061"
 )
 INVALID_INDEX_TYPE: Final = ErrorMessage(
-    "Invalid index type {} for {}; expected type {}", codes.INDEX
+    "Invalid index type {} for {}; expected type {}", codes.INDEX, "TYP-054"
 )
 TARGET_INCOMPATIBLE_TYPE: Final = ErrorMessage(
-    "{} (expression has type {}, target has type {})", codes.ASSIGNMENT
+    "{} (expression has type {}, target has type {})", codes.ASSIGNMENT, "TYP-060"
 )
 VALUE_INCOMPATIBLE_TYPE: Final = ErrorMessage(
-    'Value of "{}" has incompatible type {}; expected {}', codes.ARG_TYPE
+    'Value of "{}" has incompatible type {}; expected {}', codes.ARG_TYPE, "TYP-050"
 )
 ARGUMENT_INCOMPATIBLE_TYPE: Final = ErrorMessage(
-    'Argument {} {}has incompatible type {}; expected {}', codes.ARG_TYPE
+    'Argument {} {}has incompatible type {}; expected {}', codes.ARG_TYPE, "TYP-050"
 )
 TYPEDDICT_VALUE_INCOMPATIBLE_TYPE: Final = ErrorMessage(
-    'Value of "{}" has incompatible type {}; expected {}', codes.TYPEDDICT_ITEM
+    'Value of "{}" has incompatible type {}; expected {}', codes.TYPEDDICT_ITEM, "TYP-050"
 )
 TYPEDDICT_ARGUMENT_INCOMPATIBLE_TYPE: Final = ErrorMessage(
-    'Argument {} {}has incompatible type {}; expected {}', codes.TYPEDDICT_ITEM
+    'Argument {} {}has incompatible type {}; expected {}', codes.TYPEDDICT_ITEM, "TYP-050"
 )
 LIST_ITEM_INCOMPATIBLE_TYPE: Final = ErrorMessage(
-    "{} item {} has incompatible type {}; expected {}", codes.LIST_ITEM
+    "{} item {} has incompatible type {}; expected {}", codes.LIST_ITEM, "TYP-050"
 )
 DICT_ENTRY_INCOMPATIBLE_TYPE: Final = ErrorMessage(
-    "{} entry {} has incompatible type {}: {}; expected {}: {}", codes.DICT_ITEM
+    "{} entry {} has incompatible type {}: {}; expected {}: {}", codes.DICT_ITEM, "TYP-050"
 )
 LIST_COMP_INCOMPATIBLE_TYPE: Final = ErrorMessage(
-    "List comprehension has incompatible type List[{}]; expected List[{}]"
+    "List comprehension has incompatible type List[{}]; expected List[{}]", issue="TYP-050"
 )
 SET_COMP_INCOMPATIBLE_TYPE: Final = ErrorMessage(
-    "Set comprehension has incompatible type Set[{}]; expected Set[{}]"
+    "Set comprehension has incompatible type Set[{}]; expected Set[{}]", issue="TYP-050"
 )
 DICT_COMP_INCOMPATIBLE_TYPE: Final = ErrorMessage(
-    "{} expression in dictionary comprehension has incompatible type {}; expected type {}"
+    "{} expression in dictionary comprehension has incompatible type {}; expected type {}",
+    issue="TYP-050",
 )
 GENERATOR_INCOMPATIBLE_TYPE: Final = ErrorMessage(
-    "Generator has incompatible item type {}; expected {}"
+    "Generator has incompatible item type {}; expected {}", issue="TYP-060"
 )
 MULTIPLE_VALUES_FOR_KWARG: Final = ErrorMessage(
     '{} gets multiple values for keyword argument "{}"'
@@ -484,7 +496,7 @@ INCOMPATIBLE_BASE_CLASS_DEFNS: Final = ErrorMessage(
     'Definition of "{}" in base class "{}" is incompatible with definition in base class "{}"'
 )
 CANNOT_ASSIGN_TO_CLASSVAR: Final = ErrorMessage(
-    'Cannot assign to class variable "{}" via instance'
+    'Cannot assign to class variable "{}" via instance', issue="TYP-075"
 )
 CANNOT_OVERRIDE_TO_FINAL: Final = ErrorMessage(
     'Cannot override writable attribute "{}" with a final one'
@@ -528,11 +540,13 @@ INVALID_YIELD_FROM: Final = ErrorMessage('"yield from" can\'t be applied to {}')
 INVALID_SIGNATURE: Final = ErrorMessage('Invalid signature {}')
 INVALID_SIGNATURE_SPECIAL: Final = ErrorMessage('Invalid signature {} for "{}"')
 UNSUPPORTED_TYPE_TYPE: Final = ErrorMessage('Cannot instantiate type "Type[{}]"')
-REDUNDANT_CAST: Final = ErrorMessage("Redundant cast to {}", codes.REDUNDANT_CAST)
+REDUNDANT_CAST: Final = ErrorMessage("Redundant cast to {}", codes.REDUNDANT_CAST, "TYP-071")
 UNFOLLOWED_IMPORT: Final = ErrorMessage(
     "{} becomes {} due to an unfollowed import", codes.NO_ANY_UNIMPORTED
 )
-ANNOTATION_NEEDED: Final = ErrorMessage('Need type {} for "{}"{}', codes.VAR_ANNOTATED)
+ANNOTATION_NEEDED: Final = ErrorMessage(
+    'Need type {} for "{}"{}', codes.VAR_ANNOTATED, "TYP-068"
+)
 NO_EXPLICIT_ANY: Final = ErrorMessage('Explicit "Any" is not allowed')
 TYPEDDICT_MISSING_KEYS: Final = ErrorMessage("Missing {} for TypedDict {}", codes.TYPEDDICT_ITEM)
 TYPEDDICT_EXTRA_KEYS: Final = ErrorMessage("Extra {} for TypedDict {}", codes.TYPEDDICT_ITEM)
@@ -555,6 +569,7 @@ TYPEDDICT_NAMED_CANNOT_DELETE_KEY: Final = ErrorMessage(
 TYPEDDICT_INCONSISTENT_SETDEFAULT_ARGS: Final = ErrorMessage(
     'Argument 2 to "setdefault" of "TypedDict" has incompatible type {}; expected {}',
     codes.TYPEDDICT_ITEM,
+    "TYP-050",
 )
 PARAMETERIZED_GENERICS_DISALLOWED: Final = ErrorMessage(
     "Parameterized generics cannot be used with class or instance checks"
@@ -634,11 +649,15 @@ DUPLICATE_TYPEVARS_IN_GENERIC_OR_PROTOCOL: Final = ErrorMessage(
 GENERIC_PROTOCOL_NOT_ALL_TYPEVARS: Final = ErrorMessage(
     "If Generic[...] or Protocol[...] is present it should list all type variables", issue="TYP-027"
 )
-FREE_TYPEVAR_EXPECTED: Final = ErrorMessage('Free type variable expected in {}[...]')
+FREE_TYPEVAR_EXPECTED: Final = ErrorMessage(
+    'Free type variable expected in {}[...]', issue="TYP-063"
+)
 UNSUPPORTED_DYNAMIC_BASE_CLASS: Final = ErrorMessage('Unsupported dynamic base class{}')
 INVALID_BASE_CLASS: Final = ErrorMessage('Invalid base class{}')
 CANNOT_SUBCLASS_NEWTYPE: Final = ErrorMessage('Cannot subclass "NewType"')
-CANNOT_SUBCLASS_ANY_NAMED: Final = ErrorMessage('Class cannot subclass "{}" (has type "Any")')
+CANNOT_SUBCLASS_ANY_NAMED: Final = ErrorMessage(
+    'Class cannot subclass "{}" (has type "Any")', issue="TYP-028"
+)
 CANNOT_SUBCLASS_ANY: Final = ErrorMessage('Class cannot subclass value of type "Any"', issue="TYP-028")
 INCOMPATIBLE_BASES: Final = ErrorMessage("Class has two incompatible bases derived from tuple")
 CANNOT_DETERMINE_MRO: Final = ErrorMessage(
@@ -669,7 +688,7 @@ NO_IMPLICIT_REEXPORT: Final = ErrorMessage(
 )
 INCORRECT_RELATIVE_IMPORT: Final = ErrorMessage("Relative import climbs too many namespaces")
 INVALID_TYPE_ALIAS_TARGET: Final = ErrorMessage(
-    'Type variable "{}" is invalid as target for type alias'
+    'Type variable "{}" is invalid as target for type alias', issue="TYP-074"
 )
 NAMEDTUPLE_ATTRIBUTE_UNSUPPORTED: Final = ErrorMessage(
     "NamedTuple type as an attribute is not supported"
@@ -699,7 +718,8 @@ PROTOCOL_MEMBERS_MUST_BE_TYPED: Final = ErrorMessage(
     'All protocol members must have explicitly declared types', issue="TYP-031"
 )
 MULTIPLE_TYPES_WITHOUT_EXPLICIT_TYPE: Final = ErrorMessage(
-    'Cannot assign multiple types to name "{}" without an explicit "Type[...]" annotation'
+    'Cannot assign multiple types to name "{}" without an explicit "Type[...]" annotation',
+    issue="TYP-064",
 )
 TYPE_DECLARATION_IN_ASSIGNMENT: Final = ErrorMessage(
     'Type cannot be declared in assignment to non-self attribute', issue="TYP-032"
@@ -720,7 +740,7 @@ STARTYPE_ONLY_FOR_STAR_EXPRESSIONS: Final = ErrorMessage(
 INCOMPATIBLE_TUPLE_ITEM_COUNT: Final = ErrorMessage('Incompatible number of tuple items')
 TUPLE_TYPE_EXPECTED: Final = ErrorMessage('Tuple type expected for multiple variables')
 CANNOT_DECLARE_TYPE_OF_TYPEVAR: Final = ErrorMessage("Cannot declare the type of a type variable", issue="TYP-034")
-REDEFINE_AS_TYPEVAR: Final = ErrorMessage('Cannot redefine "{}" as a type variable')
+REDEFINE_AS_TYPEVAR: Final = ErrorMessage('Cannot redefine "{}" as a type variable', issue="TYP-034")
 TYPEVAR_CALL_TOO_FEW_ARGS: Final = ErrorMessage("Too few arguments for {}()")
 TYPEVAR_CALL_EXPECTED_STRING_LITERAL: Final = ErrorMessage(
     "{}() expects a string literal as first argument"
@@ -749,7 +769,8 @@ CLASSVAR_OUTSIDE_CLASS_BODY: Final = ErrorMessage(
     'ClassVar can only be used for assignments in class body'
 )
 MULTIPLE_MODULE_ASSIGNMENT: Final = ErrorMessage(
-    'Cannot assign multiple modules to name "{}" without explicit "types.ModuleType" annotation'
+    'Cannot assign multiple modules to name "{}" without explicit "types.ModuleType" annotation',
+    issue="TYP-064",
 )
 DELETABLE_MUST_BE_WITH_LIST_OR_TUPLE: Final = ErrorMessage(
     '"__deletable__" must be initialized with a list or tuple expression'
@@ -775,7 +796,8 @@ LOCAL_DEFINITION_BEFORE_NONLOCAL: Final = ErrorMessage(
     'Name "{}" is already defined in local scope before nonlocal declaration'
 )
 NAME_ONLY_VALID_IN_TYPE_CONTEXT: Final = ErrorMessage(
-    '"{}" is a type variable and only valid in type context'
+    '"{}" is a type variable and only valid in type context',
+    issue="TYP-065",
 )
 SUPER_OUTSIDE_CLASS: Final = ErrorMessage('"super" used outside class')
 INVALID_STAR_EXPRESSION: Final = ErrorMessage(
@@ -933,9 +955,11 @@ INVALID_LOCATION_FOR_PARAMSPEC: Final = ErrorMessage('Invalid location for Param
 UNBOUND_PARAMSPEC: Final = ErrorMessage('ParamSpec "{}" is unbound')
 PARAMSPEC_USED_WITH_ARGS: Final = ErrorMessage('ParamSpec "{}" used with arguments')
 NO_BOUND_TYPEVAR_GENERIC_ALIAS: Final = ErrorMessage(
-    'Can\'t use bound type variable "{}" to define generic alias'
+    'Can\'t use bound type variable "{}" to define generic alias', issue="TYP-073"
 )
-TYPEVAR_USED_WITH_ARGS: Final = ErrorMessage('Type variable "{}" used with arguments')
+TYPEVAR_USED_WITH_ARGS: Final = ErrorMessage(
+    'Type variable "{}" used with arguments', issue="TYP-072"
+)
 ONLY_OUTERMOST_FINAL: Final = ErrorMessage(
     "Final can be only used as an outermost qualifier in a variable annotation", issue="TYP-045"
 )
@@ -981,7 +1005,7 @@ INVALID_TYPE_USE_LITERAL: Final = ErrorMessage(
     "Invalid type: try using Literal[{}] instead?", codes.VALID_TYPE
 )
 INVALID_LITERAL_TYPE: Final = ErrorMessage(
-    "Invalid type: {} literals cannot be used as a type", codes.VALID_TYPE
+    "Invalid type: {} literals cannot be used as a type", codes.VALID_TYPE, "TYP-059"
 )
 INVALID_ANNOTATION: Final = ErrorMessage("Invalid type comment or annotation", codes.VALID_TYPE, "TYP-043")
 PIPE_UNION_REQUIRES_PY310: Final = ErrorMessage("X | Y syntax for unions requires Python 3.10")
@@ -996,19 +1020,25 @@ INVALID_ARG_CONSTRUCTOR: Final = ErrorMessage('Invalid argument constructor "{}"
 ARGS_SHOULD_NOT_HAVE_NAMES: Final = ErrorMessage("{} arguments should not have names")
 LITERAL_AT_LEAST_ONE_ARG: Final = ErrorMessage("Literal[...] must have at least one parameter", issue="TYP-042")
 LITERAL_INDEX_CANNOT_BE_ANY: Final = ErrorMessage(
-    'Parameter {} of Literal[...] cannot be of type "Any"'
+    'Parameter {} of Literal[...] cannot be of type "Any"', issue="TYP-066"
 )
 LITERAL_INDEX_INVALID_TYPE: Final = ErrorMessage(
-    'Parameter {} of Literal[...] cannot be of type "{}"'
+    'Parameter {} of Literal[...] cannot be of type "{}"', issue="TYP-066"
 )
 LITERAL_INVALID_EXPRESSION: Final = ErrorMessage(
     "Invalid type: Literal[...] cannot contain arbitrary expressions", issue="TYP-041"
 )
-LITERAL_INVALID_PARAMETER: Final = ErrorMessage("Parameter {} of Literal[...] is invalid")
-TYPEVAR_BOUND_BY_OUTER_CLASS: Final = ErrorMessage('Type variable "{}" is bound by an outer class')
-TYPE_ARG_COUNT_MISMATCH: Final = ErrorMessage('"{}" expects {}, but {} given', codes.TYPE_ARG)
+LITERAL_INVALID_PARAMETER: Final = ErrorMessage(
+    "Parameter {} of Literal[...] is invalid", issue="TYP-066"
+)
+TYPEVAR_BOUND_BY_OUTER_CLASS: Final = ErrorMessage(
+    'Type variable "{}" is bound by an outer class', issue="TYP-070"
+)
+TYPE_ARG_COUNT_MISMATCH: Final = ErrorMessage(
+    '"{}" expects {}, but {} given', codes.TYPE_ARG, "TYP-067"
+)
 TYPE_ALIAS_ARG_COUNT_MISMATCH: Final = ErrorMessage(
-    "Bad number of arguments for type alias, expected: {}, given: {}"
+    "Bad number of arguments for type alias, expected: {}, given: {}", issue="TYP-069"
 )
 INVALID_TYPE_ALIAS: Final = ErrorMessage("Invalid type alias: expression is not a valid type", issue="TYP-048")
 CANNOT_RESOLVE_TYPE: Final = ErrorMessage('Cannot resolve {} "{}" (possible cyclic definition)')
