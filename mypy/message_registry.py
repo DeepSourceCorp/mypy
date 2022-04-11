@@ -179,6 +179,7 @@ TYPEVAR_VARIANCE_DEF: Final = ErrorMessage('TypeVar "{}" may only be a literal b
 TYPEVAR_BOUND_MUST_BE_TYPE: Final = ErrorMessage('TypeVar "bound" must be a type')
 TYPEVAR_UNEXPECTED_ARGUMENT: Final = ErrorMessage('Unexpected argument to "TypeVar()"')
 PARAMSPEC_INVALID_LOCATION: Final = ErrorMessage('Invalid location for ParamSpec "{}"')
+PARAMSPEC_FIRST_ARG: Final = ErrorMessage("Only the first argument to ParamSpec has defined semantics")
 
 # FastParse
 TYPE_COMMENT_SYNTAX_ERROR_VALUE: Final = ErrorMessage(
@@ -213,6 +214,7 @@ ARG_NAME_EXPECTED_STRING_LITERAL: Final = ErrorMessage(
 EXCEPT_EXPR_NOTNAME_UNSUPPORTED: Final = ErrorMessage(
     'Sorry, "except <expr>, <anything but a name>" is not supported', codes.SYNTAX
 )
+FAIL_MERGE_OVERLOADS: Final = ErrorMessage("Condition can't be inferred, unable to merge overloads")
 
 # Nodes
 DUPLICATE_ARGUMENT_IN_X: Final = ErrorMessage('Duplicate argument "{}" in {}')
@@ -779,8 +781,10 @@ INVALID_STAR_EXPRESSION: Final = ErrorMessage(
 )
 YIELD_OUTSIDE_FUNC: Final = ErrorMessage('"yield" outside function')
 YIELD_FROM_OUTSIDE_FUNC: Final = ErrorMessage('"yield from" outside function')
+YIELD_IN_LISTCOMP_GENEXPR: Final = ErrorMessage('"yield" inside comprehension or generator expression')
 YIELD_IN_ASYNC_FUNC: Final = ErrorMessage('"yield" in async function')
 YIELD_FROM_IN_ASYNC_FUNC: Final = ErrorMessage('"yield from" in async function')
+YIELD_FROM_IN_LISTCOMP_GENEXPR: Final = ErrorMessage('"yield from" inside comprehension or generator expression')
 CAST_TARGET_IS_NOT_TYPE: Final = ErrorMessage('Cast target is not a type')
 ANY_CALL_UNSUPPORTED: Final = ErrorMessage(
     'Any(...) is no longer supported. Use cast(Any, ...) instead'
@@ -794,7 +798,7 @@ AWAIT_OUTSIDE_COROUTINE: Final = ErrorMessage('"await" outside coroutine ("async
 CANNOT_RESOLVE_NAME: Final = ErrorMessage('Cannot resolve {} "{}" (possible cyclic definition)')
 NAME_NOT_DEFINED: Final = ErrorMessage('Name "{}" is not defined', codes.NAME_DEFINED)
 NAME_ALREADY_DEFINED: Final = ErrorMessage('{} "{}" already defined{}', codes.NO_REDEF)
-
+UNSUPPORTED_CLASS_SCOPED_IMPORT: Final = ErrorMessage('Unsupported class scoped import')
 
 # Semantic Analysis: Enum
 ENUM_ATTRIBUTE_UNSUPPORTED: Final = ErrorMessage("Enum type as attribute is not supported")
@@ -1009,6 +1013,10 @@ TYPE_ALIAS_ARG_COUNT_MISMATCH: Final = ErrorMessage(
 INVALID_TYPE_ALIAS: Final = ErrorMessage("Invalid type alias: expression is not a valid type")
 CANNOT_RESOLVE_TYPE: Final = ErrorMessage('Cannot resolve {} "{}" (possible cyclic definition)')
 UNION_SYNTAX_REQUIRES_PY310: Final = ErrorMessage("X | Y syntax for unions requires Python 3.10")
+NO_BASE_CLASS_AFTER_ENUM: Final = ErrorMessage('No base classes are allowed after "{}"')
+ENUM_MULTIPLE_DATA_MIXINS: Final = ErrorMessage(
+    'Only a single data type mixin is allowed for Enum subtypes, found extra "{}"'
+)
 
 # Super
 TOO_MANY_ARGS_FOR_SUPER: Final = ErrorMessage('Too many arguments for "super"')
@@ -1051,6 +1059,11 @@ CANNOT_ACCESS_FINAL_INSTANCE_ATTR: Final = ErrorMessage(
     'Cannot access final instance attribute "{}" on class object'
 )
 CANNOT_MAKE_DELETABLE_FINAL: Final = ErrorMessage("Deletable attribute cannot be final")
+
+# Enum
+ENUM_MEMBERS_ATTR_WILL_BE_OVERRIDEN: Final = ErrorMessage(
+    'Assigned "__members__" will be overriden by "Enum" internally'
+)
 
 # ClassVar
 CANNOT_OVERRIDE_INSTANCE_VAR: Final = ErrorMessage(
@@ -1169,3 +1182,4 @@ ISINSTANCE_ON_UNEXPANDED_TYPE: Final = ErrorMessage(
     "Never apply isinstance() to unexpanded types; use mypy.types.get_proper_type() first"
 )
 REDUNDANT_GET_PROPER_TYPE: Final = ErrorMessage("Redundant call to get_proper_type()")
+CANNOT_MODIFY_MATCH_ARGS: Final = ErrorMessage('Cannot assign to "__match_args__"')

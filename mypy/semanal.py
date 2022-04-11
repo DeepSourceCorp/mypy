@@ -51,7 +51,7 @@ Some important properties:
 from contextlib import contextmanager
 
 from typing import (
-    List, Dict, Set, Tuple, cast, TypeVar, Union, Optional, Callable, Iterator, Iterable
+    Any, List, Dict, Set, Tuple, cast, TypeVar, Union, Optional, Callable, Iterator, Iterable
 )
 from typing_extensions import Final, TypeAlias as _TypeAlias
 
@@ -78,7 +78,7 @@ from mypy.nodes import (
     typing_extensions_aliases,
     EnumCallExpr, RUNTIME_PROTOCOL_DECOS, FakeExpression, Statement, AssignmentExpr,
     ParamSpecExpr, EllipsisExpr, TypeVarLikeExpr, implicit_module_attrs,
-    MatchStmt,
+    MatchStmt, FuncBase
 )
 from mypy.patterns import (
     AsPattern, OrPattern, ValuePattern, SequencePattern,
@@ -95,11 +95,11 @@ from mypy.errorcodes import ErrorCode
 from mypy.message_registry import ErrorMessage
 from mypy import message_registry, errorcodes as codes
 from mypy.types import (
-    FunctionLike, UnboundType, TypeVarType, TupleType, UnionType, StarType,
+    NEVER_NAMES, FunctionLike, UnboundType, TypeVarType, TupleType, UnionType, StarType,
     CallableType, Overloaded, Instance, Type, AnyType, LiteralType, LiteralValue,
     TypeTranslator, TypeOfAny, TypeType, NoneType, PlaceholderType, TPDICT_NAMES, ProperType,
     get_proper_type, get_proper_types, TypeAliasType, TypeVarLikeType,
-    PROTOCOL_NAMES, TYPE_ALIAS_NAMES, FINAL_TYPE_NAMES, FINAL_DECORATOR_NAMES,
+    PROTOCOL_NAMES, TYPE_ALIAS_NAMES, FINAL_TYPE_NAMES, FINAL_DECORATOR_NAMES, REVEAL_TYPE_NAMES,
     is_named_instance,
 )
 from mypy.typeops import function_type, get_type_vars
@@ -117,6 +117,7 @@ from mypy.plugin import (
 )
 from mypy.util import (
     correct_relative_import, unmangle, module_prefix, is_typeshed_file, unnamed_function,
+    is_dunder,
 )
 from mypy.scope import Scope
 from mypy.semanal_shared import (
@@ -152,6 +153,10 @@ FUTURE_IMPORTS: Final = {
 # Special cased built-in classes that are needed for basic functionality and need to be
 # available very early on.
 CORE_BUILTIN_CLASSES: Final = ["object", "bool", "function"]
+
+# Subclasses can override these Var attributes with incompatible types. This can also be
+# set for individual attributes using 'allow_incompatible_override' of Var.
+ALLOW_INCOMPATIBLE_OVERRIDE: Final = ('__slots__', '__deletable__', '__match_args__')
 
 
 # Used for tracking incomplete references
@@ -227,7 +232,6 @@ class SemanticAnalyzer(NodeVisitor[None],
     errors: Errors  # Keeps track of generated errors
     plugin: Plugin  # Mypy plugin for special casing of library features
     statement: Optional[Statement] = None  # Statement/definition being analyzed
-    future_import_flags: Set[str]
 
     # Mapping from 'async def' function definitions to their return type wrapped as a
     # 'Coroutine[Any, Any, T]'. Used to keep track of whether a function definition's
@@ -291,8 +295,6 @@ class SemanticAnalyzer(NodeVisitor[None],
         # Trace line numbers for every file where deferral happened during analysis of
         # current SCC or top-level function.
         self.deferral_debug_context: List[Tuple[str, int]] = []
-
-        self.future_import_flags: Set[str] = set()
 
     # mypyc doesn't properly handle implementing an abstractproperty
     # with a regular attribute so we make them properties
@@ -2174,11 +2176,14 @@ class SemanticAnalyzer(NodeVisitor[None],
             return True
         if allow_none and isinstance(rv, NameExpr) and rv.fullname == 'builtins.None':
             return True
-        if (isinstance(rv, OpExpr)
-                and rv.op == '|'
-                and self.can_be_type_alias(rv.left, allow_none=True)
-                and self.can_be_type_alias(rv.right, allow_none=True)):
-            return True
+        if isinstance(rv, OpExpr) and rv.op == '|':
+            if self.is_stub_file:
+                return True
+            if (
+                self.can_be_type_alias(rv.left, allow_none=True)
+                and self.can_be_type_alias(rv.right, allow_none=True)
+            ):
+                return True
         return False
 
     def is_type_ref(self, rv: Expression, bare: bool = False) -> bool:
@@ -2221,11 +2226,7 @@ class SemanticAnalyzer(NodeVisitor[None],
             # Assignment color = Color['RED'] defines a variable, not an alias.
             return not rv.node.is_enum
         if isinstance(rv.node, Var):
-            return rv.node.fullname in (
-                'typing.NoReturn',
-                'typing_extensions.NoReturn',
-                'mypy_extensions.NoReturn',
-            )
+            return rv.node.fullname in NEVER_NAMES
 
         if isinstance(rv, NameExpr):
             n = self.lookup(rv.name, rv)
@@ -2474,8 +2475,9 @@ class SemanticAnalyzer(NodeVisitor[None],
                     cur_node = self.type.names.get(lval.name, None)
                     if (cur_node and isinstance(cur_node.node, Var) and
                             not (isinstance(s.rvalue, TempNode) and s.rvalue.no_rhs)):
-                        cur_node.node.is_final = True
-                        s.is_final_def = True
+                        # Double underscored members are writable on an `Enum`.
+                        # (Except read-only `__members__` but that is handled in type checker)
+                        cur_node.node.is_final = s.is_final_def = not is_dunder(cur_node.node.name)
 
                 # Special case: deferred initialization of a final attribute in __init__.
                 # In this case we just pretend this is a valid final definition to suppress
@@ -2641,7 +2643,7 @@ class SemanticAnalyzer(NodeVisitor[None],
 
         pep_613 = False
         if s.unanalyzed_type is not None and isinstance(s.unanalyzed_type, UnboundType):
-            lookup = self.lookup(s.unanalyzed_type.name, s, suppress_errors=True)
+            lookup = self.lookup_qualified(s.unanalyzed_type.name, s, suppress_errors=True)
             if lookup and lookup.fullname in TYPE_ALIAS_NAMES:
                 pep_613 = True
         if not pep_613 and s.unanalyzed_type is not None:
@@ -2906,18 +2908,20 @@ class SemanticAnalyzer(NodeVisitor[None],
         self, lvalue: NameExpr, kind: int, inferred: bool, has_explicit_value: bool,
     ) -> Var:
         """Return a Var node for an lvalue that is a name expression."""
-        v = Var(lvalue.name)
+        name = lvalue.name
+        v = Var(name)
         v.set_line(lvalue)
         v.is_inferred = inferred
         if kind == MDEF:
             assert self.type is not None
             v.info = self.type
             v.is_initialized_in_class = True
+            v.allow_incompatible_override = name in ALLOW_INCOMPATIBLE_OVERRIDE
         if kind != LDEF:
-            v._fullname = self.qualified_name(lvalue.name)
+            v._fullname = self.qualified_name(name)
         else:
             # fullanme should never stay None
-            v._fullname = lvalue.name
+            v._fullname = name
         v.is_ready = False  # Type not inferred yet
         v.has_explicit_value = has_explicit_value
         return v
@@ -3282,6 +3286,12 @@ class SemanticAnalyzer(NodeVisitor[None],
         name = lvalue.name
         if not self.check_typevarlike_name(call, name, s):
             return False
+
+        # ParamSpec is different from a regular TypeVar:
+        # arguments are not semantically valid. But, allowed in runtime.
+        # So, we need to warn users about possible invalid usage.
+        if len(call.args) > 1:
+            self.fail(message_registry.PARAMSPEC_FIRST_ARG, s)
 
         # PEP 612 reserves the right to define bound, covariant and contravariant arguments to
         # ParamSpec in a later PEP. If and when that happens, we should do something
@@ -3818,13 +3828,15 @@ class SemanticAnalyzer(NodeVisitor[None],
             expr.expr.accept(self)
 
     def visit_yield_from_expr(self, e: YieldFromExpr) -> None:
-        if not self.is_func_scope():  # not sure
+        if not self.is_func_scope():
             self.fail(message_registry.YIELD_FROM_OUTSIDE_FUNC, e, serious=True, blocker=True)
+        elif self.is_comprehension_stack[-1]:
+            self.fail(message_registry.YIELD_FROM_IN_LISTCOMP_GENEXPR,
+                      e, serious=True, blocker=True)
+        elif self.function_stack[-1].is_coroutine:
+            self.fail(message_registry.YIELD_FROM_IN_ASYNC_FUNC, e, serious=True, blocker=True)
         else:
-            if self.function_stack[-1].is_coroutine:
-                self.fail(message_registry.YIELD_FROM_IN_ASYNC_FUNC, e, serious=True, blocker=True)
-            else:
-                self.function_stack[-1].is_generator = True
+            self.function_stack[-1].is_generator = True
         if e.expr:
             e.expr.accept(self)
 
@@ -3851,7 +3863,7 @@ class SemanticAnalyzer(NodeVisitor[None],
             expr.analyzed.line = expr.line
             expr.analyzed.column = expr.column
             expr.analyzed.accept(self)
-        elif refers_to_fullname(expr.callee, 'builtins.reveal_type'):
+        elif refers_to_fullname(expr.callee, REVEAL_TYPE_NAMES):
             if not self.check_fixed_args(expr, 1, 'reveal_type'):
                 return
             expr.analyzed = RevealExpr(kind=REVEAL_TYPE, expr=expr.args[0])
@@ -4200,21 +4212,22 @@ class SemanticAnalyzer(NodeVisitor[None],
         if analyzed is not None:
             expr.type = analyzed
 
-    def visit_yield_expr(self, expr: YieldExpr) -> None:
+    def visit_yield_expr(self, e: YieldExpr) -> None:
         if not self.is_func_scope():
-            self.fail(message_registry.YIELD_OUTSIDE_FUNC, expr, serious=True, blocker=True)
-        else:
-            if self.function_stack[-1].is_coroutine:
-                if self.options.python_version < (3, 6):
-                    self.fail(message_registry.YIELD_IN_ASYNC_FUNC, expr, serious=True,
-                              blocker=True)
-                else:
-                    self.function_stack[-1].is_generator = True
-                    self.function_stack[-1].is_async_generator = True
+            self.fail(message_registry.YIELD_OUTSIDE_FUNC, e, serious=True, blocker=True)
+        elif self.is_comprehension_stack[-1]:
+            self.fail(message_registry.YIELD_IN_LISTCOMP_GENEXPR,
+                      e, serious=True, blocker=True)
+        elif self.function_stack[-1].is_coroutine:
+            if self.options.python_version < (3, 6):
+                self.fail(message_registry.YIELD_IN_ASYNC_FUNC, e, serious=True, blocker=True)
             else:
                 self.function_stack[-1].is_generator = True
-        if expr.expr:
-            expr.expr.accept(self)
+                self.function_stack[-1].is_async_generator = True
+        else:
+            self.function_stack[-1].is_generator = True
+        if e.expr:
+            e.expr.accept(self)
 
     def visit_await_expr(self, expr: AwaitExpr) -> None:
         if not self.is_func_scope():
@@ -4765,6 +4778,48 @@ class SemanticAnalyzer(NodeVisitor[None],
                 module_hidden=module_hidden
             )
 
+    def _get_node_for_class_scoped_import(
+        self, name: str, symbol_node: Optional[SymbolNode], context: Context
+    ) -> Optional[SymbolNode]:
+        if symbol_node is None:
+            return None
+        # I promise this type checks; I'm just making mypyc issues go away.
+        # mypyc is absolutely convinced that `symbol_node` narrows to a Var in the following,
+        # when it can also be a FuncBase. Once fixed, `f` in the following can be removed.
+        # See also https://github.com/mypyc/mypyc/issues/892
+        f = cast(Any, lambda x: x)
+        if isinstance(f(symbol_node), (FuncBase, Var)):
+            # For imports in class scope, we construct a new node to represent the symbol and
+            # set its `info` attribute to `self.type`.
+            existing = self.current_symbol_table().get(name)
+            if (
+                # The redefinition checks in `add_symbol_table_node` don't work for our
+                # constructed Var / FuncBase, so check for possible redefinitions here.
+                existing is not None
+                and isinstance(f(existing.node), (FuncBase, Var))
+                and (
+                    isinstance(f(existing.type), f(AnyType))
+                    or f(existing.type) == f(symbol_node).type
+                )
+            ):
+                return existing.node
+
+            # Construct the new node
+            if isinstance(f(symbol_node), FuncBase):
+                # In theory we could construct a new node here as well, but in practice
+                # it doesn't work well, see #12197
+                typ: Optional[Type] = AnyType(TypeOfAny.from_error)
+                self.fail(message_registry.UNSUPPORTED_CLASS_SCOPED_IMPORT, context)
+            else:
+                typ = f(symbol_node).type
+            symbol_node = Var(name, typ)
+            symbol_node._fullname = self.qualified_name(name)
+            assert self.type is not None  # guaranteed by is_class_scope
+            symbol_node.info = self.type
+            symbol_node.line = context.line
+            symbol_node.column = context.column
+        return symbol_node
+
     def add_imported_symbol(self,
                             name: str,
                             node: SymbolTableNode,
@@ -4773,7 +4828,13 @@ class SemanticAnalyzer(NodeVisitor[None],
                             module_hidden: bool) -> None:
         """Add an alias to an existing symbol through import."""
         assert not module_hidden or not module_public
-        symbol = SymbolTableNode(node.kind, node.node,
+
+        symbol_node: Optional[SymbolNode] = node.node
+
+        if self.is_class_scope():
+            symbol_node = self._get_node_for_class_scoped_import(name, symbol_node, context)
+
+        symbol = SymbolTableNode(node.kind, symbol_node,
                                  module_public=module_public,
                                  module_hidden=module_hidden)
         self.add_symbol_table_node(name, symbol, context)
@@ -5300,10 +5361,12 @@ class SemanticAnalyzer(NodeVisitor[None],
 
     def set_future_import_flags(self, module_name: str) -> None:
         if module_name in FUTURE_IMPORTS:
-            self.future_import_flags.add(FUTURE_IMPORTS[module_name])
+            self.modules[self.cur_mod_id].future_import_flags.add(
+                FUTURE_IMPORTS[module_name],
+            )
 
     def is_future_flag_set(self, flag: str) -> bool:
-        return flag in self.future_import_flags
+        return self.modules[self.cur_mod_id].is_future_flag_set(flag)
 
 
 class HasPlaceholders(TypeQuery[bool]):

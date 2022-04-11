@@ -260,7 +260,8 @@ class MypyFile(SymbolNode):
 
     __slots__ = ('_fullname', 'path', 'defs', 'alias_deps',
                  'is_bom', 'names', 'imports', 'ignored_lines', 'is_stub',
-                 'is_cache_skeleton', 'is_partial_stub_package', 'plugin_deps')
+                 'is_cache_skeleton', 'is_partial_stub_package', 'plugin_deps',
+                 'future_import_flags')
 
     # Fully qualified module name
     _fullname: Bogus[str]
@@ -289,6 +290,8 @@ class MypyFile(SymbolNode):
     is_partial_stub_package: bool
     # Plugin-created dependencies
     plugin_deps: Dict[str, Set[str]]
+    # Future imports defined in this file. Populated during semantic analysis.
+    future_import_flags: Set[str]
 
     def __init__(self,
                  defs: List[Statement],
@@ -311,6 +314,7 @@ class MypyFile(SymbolNode):
         self.is_stub = False
         self.is_cache_skeleton = False
         self.is_partial_stub_package = False
+        self.future_import_flags = set()
 
     def local_definitions(self) -> Iterator[Definition]:
         """Return all definitions within the module (including nested).
@@ -333,6 +337,9 @@ class MypyFile(SymbolNode):
     def is_package_init_file(self) -> bool:
         return len(self.path) != 0 and os.path.basename(self.path).startswith('__init__.')
 
+    def is_future_flag_set(self, flag: str) -> bool:
+        return flag in self.future_import_flags
+
     def serialize(self) -> JsonDict:
         return {'.class': 'MypyFile',
                 '_fullname': self._fullname,
@@ -340,6 +347,7 @@ class MypyFile(SymbolNode):
                 'is_stub': self.is_stub,
                 'path': self.path,
                 'is_partial_stub_package': self.is_partial_stub_package,
+                'future_import_flags': list(self.future_import_flags),
                 }
 
     @classmethod
@@ -352,6 +360,7 @@ class MypyFile(SymbolNode):
         tree.path = data['path']
         tree.is_partial_stub_package = data['is_partial_stub_package']
         tree.is_cache_skeleton = True
+        tree.future_import_flags = set(data['future_import_flags'])
         return tree
 
 
@@ -845,7 +854,7 @@ VAR_FLAGS: Final = [
     'is_classmethod', 'is_property', 'is_settable_property', 'is_suppressed_import',
     'is_classvar', 'is_abstract_var', 'is_final', 'final_unset_in_class', 'final_set_in_init',
     'explicit_self_type', 'is_ready', 'from_module_getattr',
-    'has_explicit_value',
+    'has_explicit_value', 'allow_incompatible_override',
 ]
 
 
@@ -877,6 +886,7 @@ class Var(SymbolNode):
                  'explicit_self_type',
                  'from_module_getattr',
                  'has_explicit_value',
+                 'allow_incompatible_override',
                  )
 
     def __init__(self, name: str, type: 'Optional[mypy.types.Type]' = None) -> None:
@@ -924,6 +934,8 @@ class Var(SymbolNode):
         # Var can be created with an explicit value `a = 1` or without one `a: int`,
         # we need a way to tell which one is which.
         self.has_explicit_value = False
+        # If True, subclasses can override this with an incompatible type.
+        self.allow_incompatible_override = False
 
     @property
     def name(self) -> str:
@@ -1304,16 +1316,19 @@ class IfStmt(Statement):
 
 
 class RaiseStmt(Statement):
-    __slots__ = ('expr', 'from_expr')
+    __slots__ = ('expr', 'from_expr', 'legacy_mode')
 
     # Plain 'raise' is a valid statement.
     expr: Optional[Expression]
     from_expr: Optional[Expression]
+    # Is set when python2 has `raise exc, msg, traceback`.
+    legacy_mode: bool
 
     def __init__(self, expr: Optional[Expression], from_expr: Optional[Expression]) -> None:
         super().__init__()
         self.expr = expr
         self.from_expr = from_expr
+        self.legacy_mode = False
 
     def accept(self, visitor: StatementVisitor[T]) -> T:
         return visitor.visit_raise_stmt(self)
