@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 
-from typing import Optional, List, Callable, Union
+from typing import Optional, List, Callable
 from typing_extensions import Final
 from mypy_extensions import trait
 
@@ -45,10 +45,9 @@ class SemanticAnalyzerCoreInterface:
     def lookup_fully_qualified_or_none(self, name: str) -> Optional[SymbolTableNode]:
         raise NotImplementedError
 
-    # TODO(tushar): remove `str` type and `code` property from here
     @abstractmethod
-    def fail(self, msg: Union[str, ErrorMessage], ctx: Context, serious: bool = False, *,
-             blocker: bool = False, code: Optional[ErrorCode] = None) -> None:
+    def fail(self, msg: ErrorMessage, ctx: Context, serious: bool = False, *,
+             blocker: bool = False) -> None:
         raise NotImplementedError
 
     @abstractmethod

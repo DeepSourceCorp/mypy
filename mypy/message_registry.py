@@ -20,6 +20,10 @@ class ErrorMessage(NamedTuple):
         return ErrorMessage(self.value.format(*args, **kwargs), code=self.code)
 
 
+# Strings
+INCOMPATIBLE_TYPES: Final = "Incompatible types"
+INCOMPATIBLE_TYPES_IN_ASSIGNMENT: Final = "Incompatible types in assignment"
+
 # Invalid types
 INVALID_TYPE_RAW_ENUM_VALUE: Final = ErrorMessage(
     "Invalid type: try using Literal[{}.{}] instead?"
@@ -51,17 +55,15 @@ INVALID_GENERATOR_RETURN_ITEM_TYPE: Final = ErrorMessage(
     " its third type parameter in Python 2"
 )
 YIELD_VALUE_EXPECTED: Final = ErrorMessage("Yield value expected")
-INCOMPATIBLE_TYPES: Final = "Incompatible types"
-INCOMPATIBLE_TYPES_IN_ASSIGNMENT: Final = "Incompatible types in assignment"
 INCOMPATIBLE_TYPES_IN_AWAIT: Final = ErrorMessage('Incompatible types in "await"')
 INCOMPATIBLE_REDEFINITION: Final = ErrorMessage("Incompatible redefinition")
-INCOMPATIBLE_TYPES_IN_ASYNC_WITH_AENTER: Final = (
+INCOMPATIBLE_TYPES_IN_ASYNC_WITH_AENTER: Final = ErrorMessage(
     'Incompatible types in "async with" for "__aenter__"'
 )
-INCOMPATIBLE_TYPES_IN_ASYNC_WITH_AEXIT: Final = (
+INCOMPATIBLE_TYPES_IN_ASYNC_WITH_AEXIT: Final = ErrorMessage(
     'Incompatible types in "async with" for "__aexit__"'
 )
-INCOMPATIBLE_TYPES_IN_ASYNC_FOR: Final = 'Incompatible types in "async for"'
+INCOMPATIBLE_TYPES_IN_ASYNC_FOR: Final = ErrorMessage('Incompatible types in "async for"')
 
 INCOMPATIBLE_TYPES_IN_YIELD: Final = ErrorMessage('Incompatible types in "yield"')
 INCOMPATIBLE_TYPES_IN_YIELD_FROM: Final = ErrorMessage('Incompatible types in "yield from"')
@@ -72,11 +74,11 @@ INVALID_TUPLE_INDEX_TYPE: Final = ErrorMessage("Invalid tuple index type")
 TUPLE_INDEX_OUT_OF_RANGE: Final = ErrorMessage("Tuple index out of range")
 INVALID_SLICE_INDEX: Final = ErrorMessage("Slice index must be an integer or None")
 CANNOT_INFER_LAMBDA_TYPE: Final = ErrorMessage("Cannot infer type of lambda")
-CANNOT_ACCESS_INIT: Final = 'Cannot access "__init__" directly'
+CANNOT_ACCESS_INIT: Final = ErrorMessage('Cannot access "__init__" directly')
 NON_INSTANCE_NEW_TYPE: Final = ErrorMessage('"__new__" must return a class instance (got {})')
 INVALID_NEW_TYPE: Final = ErrorMessage('Incompatible return type for "__new__"')
 BAD_CONSTRUCTOR_TYPE: Final = ErrorMessage("Unsupported decorated constructor type")
-CANNOT_ASSIGN_TO_METHOD: Final = "Cannot assign to a method"
+CANNOT_ASSIGN_TO_METHOD: Final = ErrorMessage("Cannot assign to a method", codes.ASSIGNMENT)
 CANNOT_ASSIGN_TO_TYPE: Final = ErrorMessage("Cannot assign to a type")
 INCONSISTENT_ABSTRACT_OVERLOAD: Final = ErrorMessage(
     "Overloaded method has both abstract and non-abstract variants"
@@ -118,7 +120,7 @@ TYPEDDICT_KEY_MUST_BE_STRING_LITERAL: Final = ErrorMessage(
 MALFORMED_ASSERT: Final = ErrorMessage("Assertion is always true, perhaps remove parentheses?")
 DUPLICATE_TYPE_SIGNATURES: Final = ErrorMessage("Function has duplicate type signatures")
 DESCRIPTOR_SET_NOT_CALLABLE: Final = ErrorMessage("{}.__set__ is not callable")
-DESCRIPTOR_GET_NOT_CALLABLE: Final = "{}.__get__ is not callable"
+DESCRIPTOR_GET_NOT_CALLABLE: Final = ErrorMessage("{}.__get__ is not callable")
 MODULE_LEVEL_GETATTRIBUTE: Final = ErrorMessage(
     "__getattribute__ is not valid at the module level"
 )
@@ -140,29 +142,44 @@ FUNCTION_ALWAYS_TRUE: Final = ErrorMessage(
     code=codes.TRUTHY_BOOL,
 )
 NOT_CALLABLE: Final = '{} not callable'
-PYTHON2_PRINT_FILE_TYPE: Final = (
+PYTHON2_PRINT_FILE_TYPE: Final = ErrorMessage(
     'Argument "file" to "print" has incompatible type "{}"; expected "{}"'
+)
+ENUM_EXTEND_EXISTING_MEMBERS: Final = ErrorMessage(
+    'Cannot extend enum with existing members: "{}"'
 )
 
 # Generic
-GENERIC_INSTANCE_VAR_CLASS_ACCESS: Final = (
+GENERIC_INSTANCE_VAR_CLASS_ACCESS: Final = ErrorMessage(
     "Access to generic instance variables via class is ambiguous"
 )
-GENERIC_CLASS_VAR_ACCESS: Final = "Access to generic class variables is ambiguous"
+GENERIC_CLASS_VAR_ACCESS: Final = ErrorMessage("Access to generic class variables is ambiguous")
 BARE_GENERIC: Final = ErrorMessage("Missing type parameters for generic type {}", codes.TYPE_ARG)
 IMPLICIT_GENERIC_ANY_BUILTIN: Final = ErrorMessage(
     'Implicit generic "Any". Use "{}" and specify generic parameters', codes.TYPE_ARG
 )
 
 # TypeVar
-INCOMPATIBLE_TYPEVAR_VALUE: Final = 'Value of type variable "{}" of {} cannot be {}'
-CANNOT_USE_TYPEVAR_AS_EXPRESSION: Final = 'Type variable "{}.{}" cannot be used as an expression'
-INVALID_TYPEVAR_AS_TYPEARG: Final = 'Type variable "{}" not valid as type argument value for "{}"'
-INVALID_TYPEVAR_ARG_BOUND: Final = 'Type argument {} of "{}" must be a subtype of {}'
-INVALID_TYPEVAR_ARG_VALUE: Final = 'Invalid type argument value for "{}"'
+INCOMPATIBLE_TYPEVAR_VALUE: Final = ErrorMessage(
+    'Value of type variable "{}" of {} cannot be {}', codes.TYPE_VAR
+)
+CANNOT_USE_TYPEVAR_AS_EXPRESSION: Final = ErrorMessage(
+    'Type variable "{}.{}" cannot be used as an expression'
+)
+INVALID_TYPEVAR_AS_TYPEARG: Final = ErrorMessage(
+    'Type variable "{}" not valid as type argument value for "{}"', codes.TYPE_VAR
+)
+INVALID_TYPEVAR_ARG_BOUND: Final = ErrorMessage(
+    'Type argument {} of "{}" must be a subtype of {}', codes.TYPE_VAR
+)
+INVALID_TYPEVAR_ARG_VALUE: Final = ErrorMessage(
+    'Invalid type argument value for "{}"', codes.TYPE_VAR
+)
 TYPEVAR_VARIANCE_DEF: Final = ErrorMessage('TypeVar "{}" may only be a literal bool')
 TYPEVAR_BOUND_MUST_BE_TYPE: Final = ErrorMessage('TypeVar "bound" must be a type')
 TYPEVAR_UNEXPECTED_ARGUMENT: Final = ErrorMessage('Unexpected argument to "TypeVar()"')
+PARAMSPEC_INVALID_LOCATION: Final = ErrorMessage('Invalid location for ParamSpec "{}"')
+PARAMSPEC_FIRST_ARG: Final = ErrorMessage("Only the first argument to ParamSpec has defined semantics")
 
 # FastParse
 TYPE_COMMENT_SYNTAX_ERROR_VALUE: Final = ErrorMessage(
@@ -197,6 +214,7 @@ ARG_NAME_EXPECTED_STRING_LITERAL: Final = ErrorMessage(
 EXCEPT_EXPR_NOTNAME_UNSUPPORTED: Final = ErrorMessage(
     'Sorry, "except <expr>, <anything but a name>" is not supported', codes.SYNTAX
 )
+FAIL_MERGE_OVERLOADS: Final = ErrorMessage("Condition can't be inferred, unable to merge overloads")
 
 # Nodes
 DUPLICATE_ARGUMENT_IN_X: Final = ErrorMessage('Duplicate argument "{}" in {}')
@@ -211,6 +229,370 @@ VAR_ARGS_BEFORE_NAMED_OR_VARARGS: Final = ErrorMessage(
 )
 KWARGS_MUST_BE_LAST: Final = ErrorMessage("A **kwargs argument must be the last argument")
 MULTIPLE_KWARGS: Final = ErrorMessage("You may only have one **kwargs argument")
+
+# String formatting checks
+FORMAT_STR_INVALID_SPECIFIER: Final = ErrorMessage(
+    "Invalid conversion specifier in format string", codes.STRING_FORMATTING
+)
+FORMAT_STR_BRACES_IN_SPECIFIER: Final = ErrorMessage(
+    "Conversion value must not contain { or }", codes.STRING_FORMATTING
+)
+FORMAT_STR_NESTING_ATMOST_TWO_LEVELS: Final = ErrorMessage(
+    "Formatting nesting must be at most two levels deep", codes.STRING_FORMATTING
+)
+FORMAT_STR_UNEXPECTED_RBRACE: Final = ErrorMessage(
+    "Invalid conversion specifier in format string: unexpected }", codes.STRING_FORMATTING
+)
+FORMAT_STR_UNMATCHED_LBRACE: Final = ErrorMessage(
+    "Invalid conversion specifier in format string: unmatched {", codes.STRING_FORMATTING
+)
+UNRECOGNIZED_FORMAT_SPEC: Final = ErrorMessage(
+    'Unrecognized format specification "{}"', codes.STRING_FORMATTING
+)
+FORMAT_STR_INVALID_CONVERSION_TYPE: Final = ErrorMessage(
+    'Invalid conversion type "{}", must be one of "r", "s" or "a"', codes.STRING_FORMATTING
+)
+FORMAT_STR_BYTES_USE_REPR: Final = ErrorMessage(
+    'On Python 3 formatting "b\'abc\'" with "{}" produces "b\'abc\'", not "abc"; use'
+    ' "{!r}" if this is desired behavior',
+    codes.STR_BYTES_PY3,
+)
+FORMAT_STR_BYTES_USE_REPR_OLD: Final = ErrorMessage(
+    'On Python 3 formatting "b\'abc\'" with "%s" produces "b\'abc\'", not "abc"; use "%r"'
+    " if this is desired behavior",
+    codes.STR_BYTES_PY3,
+)
+FORMAT_STR_INVALID_NUMERIC_FLAG: Final = ErrorMessage(
+    "Numeric flags are only allowed for numeric types", codes.STRING_FORMATTING
+)
+FORMAT_STR_REPLACEMENT_NOT_FOUND: Final = ErrorMessage(
+    "Cannot find replacement for positional format specifier {}", codes.STRING_FORMATTING
+)
+FORMAT_STR_NAMED_REPLACEMENT_NOT_FOUND: Final = ErrorMessage(
+    'Cannot find replacement for named format specifier "{}"', codes.STRING_FORMATTING
+)
+FORMAT_STR_PARTIAL_FIELD_NUMBERING: Final = ErrorMessage(
+    "Cannot combine automatic field numbering and manual field specification",
+    codes.STRING_FORMATTING,
+)
+FORMAT_STR_SYNTAX_ERROR: Final = ErrorMessage(
+    'Syntax error in format specifier "{}"', codes.STRING_FORMATTING
+)
+FORMAT_STR_INVALID_ACCESSOR_EXPR: Final = ErrorMessage(
+    'Only index and member expressions are allowed in format field accessors; got "{}"',
+    codes.STRING_FORMATTING,
+)
+FORMAT_STR_INVALID_INDEX_ACCESSOR: Final = ErrorMessage(
+    'Invalid index expression in format field accessor "{}"', codes.STRING_FORMATTING
+)
+FORMAT_STR_BYTES_ABOVE_PY35: Final = ErrorMessage(
+    "Bytes formatting is only supported in Python 3.5 and later", codes.STRING_FORMATTING
+)
+FORMAT_STR_BYTES_DICT_KEYS_MUST_BE_BYTES: Final = ErrorMessage(
+    "Dictionary keys in bytes formatting must be bytes, not strings", codes.STRING_FORMATTING
+)
+FORMAT_STR_BYTES_REQUIRED_PY3: Final = ErrorMessage(
+    "On Python 3 b'%s' requires bytes, not string", codes.STRING_FORMATTING
+)
+FORMAT_STR_INVALID_BYTES_SPECIFIER_PY35: Final = ErrorMessage(
+    'Format character "b" is only supported in Python 3.5 and later', codes.STRING_FORMATTING
+)
+FORMAT_STR_INVALID_BYTES_SPECIFIER: Final = ErrorMessage(
+    'Format character "b" is only supported on bytes patterns', codes.STRING_FORMATTING
+)
+FORMAT_STR_ASCII_SPECIFIER_PY3: Final = ErrorMessage(
+    'Format character "a" is only supported in Python 3', codes.STRING_FORMATTING
+)
+
+# strings from messages.py
+MEMBER_NOT_ASSIGNABLE: Final = ErrorMessage('Member "{}" is not assignable')
+UNSUPPORTED_OPERAND_FOR_IN: Final = ErrorMessage(
+    "Unsupported right operand type for in ({})", codes.OPERATOR
+)
+UNSUPPORTED_OPERAND_FOR_UNARY_MINUS: Final = ErrorMessage(
+    "Unsupported operand type for unary - ({})", codes.OPERATOR
+)
+UNSUPPORTED_OPERAND_FOR_UNARY_PLUS: Final = ErrorMessage(
+    "Unsupported operand type for unary + ({})", codes.OPERATOR
+)
+UNSUPPORTED_OPERAND_FOR_INVERT: Final = ErrorMessage(
+    "Unsupported operand type for ~ ({})", codes.OPERATOR
+)
+TYPE_NOT_GENERIC_OR_INDEXABLE: Final = ErrorMessage("The type {} is not generic and not indexable")
+TYPE_NOT_INDEXABLE: Final = ErrorMessage("Value of type {} is not indexable", codes.INDEX)
+UNSUPPORTED_TARGET_INDEXED_ASSIGNMENT: Final = ErrorMessage(
+    "Unsupported target for indexed assignment ({})", codes.INDEX
+)
+CALLING_FUNCTION_OF_UNKNOWN_TYPE: Final = ErrorMessage(
+    "Cannot call function of unknown type", codes.OPERATOR
+)
+TYPE_NOT_CALLABLE: Final = ErrorMessage("{} not callable", codes.OPERATOR)
+TYPE_NOT_CALLABLE_2: Final = ErrorMessage("{} not callable")
+TYPE_HAS_NO_ATTRIBUTE_X_MAYBE_Y: Final = ErrorMessage(
+    '{} has no attribute "{}"; maybe {}?{}', codes.ATTR_DEFINED
+)
+TYPE_HAS_NO_ATTRIBUTE_X: Final = ErrorMessage('{} has no attribute "{}"{}', codes.ATTR_DEFINED)
+ITEM_HAS_NO_ATTRIBUTE_X: Final = ErrorMessage(
+    'Item {} of {} has no attribute "{}"{}', codes.UNION_ATTR
+)
+TYPEVAR_UPPER_BOUND_HAS_NO_ATTRIBUTE: Final = ErrorMessage(
+    'Item {} of the upper bound {} of type variable {} has no attribute "{}"{}', codes.UNION_ATTR
+)
+UNSUPPORTED_OPERANDS_LIKELY_UNION: Final = ErrorMessage(
+    "Unsupported operand types for {} (likely involving Union)", codes.OPERATOR
+)
+UNSUPPORTED_OPERANDS: Final = ErrorMessage(
+    "Unsupported operand types for {} ({} and {})", codes.OPERATOR
+)
+UNSUPPORTED_LEFT_OPERAND_TYPE_UNION: Final = ErrorMessage(
+    "Unsupported left operand type for {} (some union)", codes.OPERATOR
+)
+UNSUPPORTED_LEFT_OPERAND_TYPE: Final = ErrorMessage(
+    "Unsupported left operand type for {} ({})", codes.OPERATOR
+)
+UNTYPED_FUNCTION_CALL: Final = ErrorMessage(
+    "Call to untyped function {} in typed context", codes.NO_UNTYPED_CALL
+)
+INVALID_INDEX_TYPE: Final = ErrorMessage(
+    "Invalid index type {} for {}; expected type {}", codes.INDEX
+)
+TARGET_INCOMPATIBLE_TYPE: Final = ErrorMessage(
+    "{} (expression has type {}, target has type {})", codes.ASSIGNMENT
+)
+VALUE_INCOMPATIBLE_TYPE: Final = ErrorMessage(
+    'Value of "{}" has incompatible type {}; expected {}', codes.ARG_TYPE
+)
+ARGUMENT_INCOMPATIBLE_TYPE: Final = ErrorMessage(
+    'Argument {} {}has incompatible type {}; expected {}', codes.ARG_TYPE
+)
+TYPEDDICT_VALUE_INCOMPATIBLE_TYPE: Final = ErrorMessage(
+    'Value of "{}" has incompatible type {}; expected {}', codes.TYPEDDICT_ITEM
+)
+TYPEDDICT_ARGUMENT_INCOMPATIBLE_TYPE: Final = ErrorMessage(
+    'Argument {} {}has incompatible type {}; expected {}', codes.TYPEDDICT_ITEM
+)
+LIST_ITEM_INCOMPATIBLE_TYPE: Final = ErrorMessage(
+    "{} item {} has incompatible type {}; expected {}", codes.LIST_ITEM
+)
+DICT_ENTRY_INCOMPATIBLE_TYPE: Final = ErrorMessage(
+    "{} entry {} has incompatible type {}: {}; expected {}: {}", codes.DICT_ITEM
+)
+LIST_COMP_INCOMPATIBLE_TYPE: Final = ErrorMessage(
+    "List comprehension has incompatible type List[{}]; expected List[{}]"
+)
+SET_COMP_INCOMPATIBLE_TYPE: Final = ErrorMessage(
+    "Set comprehension has incompatible type Set[{}]; expected Set[{}]"
+)
+DICT_COMP_INCOMPATIBLE_TYPE: Final = ErrorMessage(
+    "{} expression in dictionary comprehension has incompatible type {}; expected type {}"
+)
+GENERATOR_INCOMPATIBLE_TYPE: Final = ErrorMessage(
+    "Generator has incompatible item type {}; expected {}"
+)
+MULTIPLE_VALUES_FOR_KWARG: Final = ErrorMessage(
+    '{} gets multiple values for keyword argument "{}"'
+)
+NO_RETURN_VALUE: Final = ErrorMessage("{} does not return a value", codes.FUNC_RETURNS_VALUE)
+FUNCTION_NO_RETURN_VALUE: Final = ErrorMessage(
+    "Function does not return a value", codes.FUNC_RETURNS_VALUE
+)
+UNDERSCORE_FUNCTION_CALL: Final = ErrorMessage('Calling function named "_" is not allowed')
+READING_DELETED_VALUE: Final = ErrorMessage("Trying to read deleted variable{}")
+ASSIGNMENT_OUTSIDE_EXCEPT: Final = ErrorMessage("Assignment to variable{} outside except: block")
+OVERLOADS_REQUIRE_ATLEAST_ONE_ARG: Final = ErrorMessage(
+    "All overload variants{} require at least one argument"
+)
+UNPACK_MORE_THAN_ONE_VALUE_NEEDED: Final = ErrorMessage(
+    "Need more than 1 value to unpack ({} expected)"
+)
+UNPACK_TOO_FEW_VALUES: Final = ErrorMessage("Need more than {} values to unpack ({} expected)")
+UNPACK_TOO_MANY_VALUES: Final = ErrorMessage(
+    "Too many values to unpack ({} expected, {} provided)"
+)
+UNPACKING_STRINGS_DISALLOWED: Final = ErrorMessage("Unpacking a string is disallowed")
+TYPE_NOT_ITERABLE: Final = ErrorMessage('{} object is not iterable')
+INCOMPATIBLE_OPERATOR_ASSIGNMENT: Final = ErrorMessage(
+    "Result type of {} incompatible in assignment"
+)
+OVERLOAD_SIGNATURE_INCOMPATIBLE: Final = ErrorMessage(
+    'Signature of "{}" incompatible with {}', codes.OVERRIDE
+)
+SIGNATURE_INCOMPATIBLE_WITH_SUPERTYPE: Final = ErrorMessage(
+    'Signature of "{}" incompatible with {}', codes.OVERRIDE
+)
+ARG_INCOMPATIBLE_WITH_SUPERTYPE: Final = ErrorMessage(
+    'Argument {} of "{}" is incompatible with {}; supertype defines the argument type as "{}"',
+    codes.OVERRIDE,
+)
+RETURNTYPE_INCOMPATIBLE_WITH_SUPERTYPE: Final = ErrorMessage(
+    'Return type {} of "{}" incompatible with return type {} in {}', codes.OVERRIDE
+)
+TYPE_APPLICATION_ON_NON_GENERIC_TYPE: Final = ErrorMessage(
+    "Type application targets a non-generic function or class"
+)
+TYPE_APPLICATION_TOO_MANY_TYPES: Final = ErrorMessage(
+    "Type application has too many types ({} expected)"
+)
+TYPE_APPLICATION_TOO_FEW_TYPES: Final = ErrorMessage(
+    "Type application has too few types ({} expected)"
+)
+CANNOT_INFER_TYPE_ARG_NAMED_FUNC: Final = ErrorMessage("Cannot infer type argument {} of {}")
+CANNOT_INFER_TYPE_ARG_FUNC: Final = ErrorMessage("Cannot infer function type argument")
+INVALID_VAR_ARGS: Final = ErrorMessage("List or tuple expected as variable arguments")
+KEYWORDS_MUST_BE_STRINGS: Final = ErrorMessage("Keywords must be strings")
+ARG_MUST_BE_MAPPING: Final = ErrorMessage("Argument after ** must be a mapping{}", codes.ARG_TYPE)
+MEMBER_UNDEFINED_IN_SUPERCLASS: Final = ErrorMessage('"{}" undefined in superclass')
+SUPER_ARG_EXPECTED_TYPE: Final = ErrorMessage(
+    'Argument 1 for "super" must be a type object; got {}', codes.ARG_TYPE
+)
+FORMAT_STR_TOO_FEW_ARGS: Final = ErrorMessage(
+    "Not enough arguments for format string", codes.STRING_FORMATTING
+)
+FORMAT_STR_TOO_MANY_ARGS: Final = ErrorMessage(
+    "Not all arguments converted during string formatting", codes.STRING_FORMATTING
+)
+FORMAT_STR_UNSUPPORTED_CHAR: Final = ErrorMessage(
+    'Unsupported format character "{}"', codes.STRING_FORMATTING
+)
+STRING_INTERPOLATION_WITH_STAR_AND_KEY: Final = ErrorMessage(
+    "String interpolation contains both stars and mapping keys", codes.STRING_FORMATTING
+)
+FORMAT_STR_INVALID_CHR_CONVERSION_RANGE: Final = ErrorMessage(
+    '"{}c" requires an integer in range(256) or a single byte', codes.STRING_FORMATTING
+)
+FORMAT_STR_INVALID_CHR_CONVERSION: Final = ErrorMessage(
+    '"{}c" requires int or char', codes.STRING_FORMATTING
+)
+KEY_NOT_IN_MAPPING: Final = ErrorMessage('Key "{}" not found in mapping', codes.STRING_FORMATTING)
+FORMAT_STR_MIXED_KEYS_AND_NON_KEYS: Final = ErrorMessage(
+    "String interpolation mixes specifier with and without mapping keys", codes.STRING_FORMATTING
+)
+CANNOT_DETERMINE_TYPE: Final = ErrorMessage('Cannot determine type of "{}"', codes.HAS_TYPE)
+CANNOT_DETERMINE_TYPE_IN_BASE: Final = ErrorMessage(
+    'Cannot determine type of "{}" in base class "{}"'
+)
+DOES_NOT_ACCEPT_SELF: Final = ErrorMessage(
+    'Attribute function "{}" with type {} does not accept self argument'
+)
+INCOMPATIBLE_SELF_ARG: Final = ErrorMessage('Invalid self argument {} to {} "{}" with type {}')
+INCOMPATIBLE_CONDITIONAL_FUNCS: Final = ErrorMessage(
+    "All conditional function variants must have identical signatures"
+)
+CANNOT_INSTANTIATE_ABSTRACT_CLASS: Final = ErrorMessage(
+    'Cannot instantiate abstract class "{}" with abstract attribute{} {}', codes.ABSTRACT
+)
+INCOMPATIBLE_BASE_CLASS_DEFNS: Final = ErrorMessage(
+    'Definition of "{}" in base class "{}" is incompatible with definition in base class "{}"'
+)
+CANNOT_ASSIGN_TO_CLASSVAR: Final = ErrorMessage(
+    'Cannot assign to class variable "{}" via instance'
+)
+CANNOT_OVERRIDE_TO_FINAL: Final = ErrorMessage(
+    'Cannot override writable attribute "{}" with a final one'
+)
+CANNOT_OVERRIDE_FINAL: Final = ErrorMessage(
+    'Cannot override final attribute "{}" (previously declared in base class "{}")'
+)
+CANNOT_ASSIGN_TO_FINAL: Final = ErrorMessage('Cannot assign to final {} "{}"')
+PROTOCOL_MEMBER_CANNOT_BE_FINAL: Final = ErrorMessage("Protocol member cannot be final")
+FINAL_WITHOUT_VALUE: Final = ErrorMessage("Final name must be initialized with a value")
+PROPERTY_IS_READ_ONLY: Final = ErrorMessage('Property "{}" defined in "{}" is read-only')
+NON_OVERLAPPING_COMPARISON: Final = ErrorMessage(
+    "Non-overlapping {} check ({} type: {}, {} type: {})", codes.COMPARISON_OVERLAP
+)
+OVERLOAD_INCONSISTENT_DECORATOR_USE: Final = ErrorMessage(
+    'Overload does not consistently use the "@{}" decorator on all function signatures.'
+)
+OVERLOAD_INCOMPATIBLE_RETURN_TYPES: Final = ErrorMessage(
+    "Overloaded function signatures {} and {} overlap with incompatible return types"
+)
+OVERLOAD_SIGNATURE_WILL_NEVER_MATCH: Final = ErrorMessage(
+    "Overloaded function signature {index2} will never be matched: signature {index1}'s parameter"
+    " type(s) are the same or broader"
+)
+OVERLOAD_INCONSISTENT_TYPEVARS: Final = ErrorMessage(
+    "Overloaded function implementation cannot satisfy signature {} due to inconsistencies in how"
+    " they use type variables"
+)
+OVERLOAD_INCONSISTENT_ARGS: Final = ErrorMessage(
+    "Overloaded function implementation does not accept all possible arguments of signature {}"
+)
+OVERLOAD_INCONSISTENT_RETURN_TYPE: Final = ErrorMessage(
+    "Overloaded function implementation cannot produce return type of signature {}"
+)
+OPERATOR_METHOD_SIGNATURE_OVERLAP: Final = ErrorMessage(
+    'Signatures of "{}" of "{}" and "{}" of {} are unsafely overlapping'
+)
+FORWARD_OPERATOR_NOT_CALLABLE: Final = ErrorMessage('Forward operator "{}" is not callable')
+INCOMPATIBLE_SIGNATURES: Final = ErrorMessage('Signatures of "{}" and "{}" are incompatible')
+INVALID_YIELD_FROM: Final = ErrorMessage('"yield from" can\'t be applied to {}')
+INVALID_SIGNATURE: Final = ErrorMessage('Invalid signature {}')
+INVALID_SIGNATURE_SPECIAL: Final = ErrorMessage('Invalid signature {} for "{}"')
+UNSUPPORTED_TYPE_TYPE: Final = ErrorMessage('Cannot instantiate type "Type[{}]"')
+REDUNDANT_CAST: Final = ErrorMessage("Redundant cast to {}", codes.REDUNDANT_CAST)
+UNFOLLOWED_IMPORT: Final = ErrorMessage(
+    "{} becomes {} due to an unfollowed import", codes.NO_ANY_UNIMPORTED
+)
+ANNOTATION_NEEDED: Final = ErrorMessage('Need type {} for "{}"{}', codes.VAR_ANNOTATED)
+NO_EXPLICIT_ANY: Final = ErrorMessage('Explicit "Any" is not allowed')
+TYPEDDICT_MISSING_KEYS: Final = ErrorMessage("Missing {} for TypedDict {}", codes.TYPEDDICT_ITEM)
+TYPEDDICT_EXTRA_KEYS: Final = ErrorMessage("Extra {} for TypedDict {}", codes.TYPEDDICT_ITEM)
+TYPEDDICT_UNEXPECTED_KEYS: Final = ErrorMessage("Unexpected TypedDict {}")
+TYPEDDICT_KEYS_MISMATCH: Final = ErrorMessage("Expected {} but found {}", codes.TYPEDDICT_ITEM)
+TYPEDDICT_KEY_STRING_LITERAL_EXPECTED: Final = ErrorMessage(
+    "TypedDict key must be a string literal; expected one of {}"
+)
+TYPEDDICT_KEY_INVALID: Final = ErrorMessage(
+    '"{}" is not a valid TypedDict key; expected one of {}'
+)
+TYPEDDICT_UNKNOWN_KEY: Final = ErrorMessage('TypedDict {} has no key "{}"', codes.TYPEDDICT_ITEM)
+TYPEDDICT_AMBIGUOUS_TYPE: Final = ErrorMessage(
+    "Type of TypedDict is ambiguous, could be any of ({})"
+)
+TYPEDDICT_CANNOT_DELETE_KEY: Final = ErrorMessage('TypedDict key "{}" cannot be deleted')
+TYPEDDICT_NAMED_CANNOT_DELETE_KEY: Final = ErrorMessage(
+    'Key "{}" of TypedDict {} cannot be deleted'
+)
+TYPEDDICT_INCONSISTENT_SETDEFAULT_ARGS: Final = ErrorMessage(
+    'Argument 2 to "setdefault" of "TypedDict" has incompatible type {}; expected {}',
+    codes.TYPEDDICT_ITEM,
+)
+PARAMETERIZED_GENERICS_DISALLOWED: Final = ErrorMessage(
+    "Parameterized generics cannot be used with class or instance checks"
+)
+EXPR_HAS_ANY_TYPE: Final = ErrorMessage('Expression has type "Any"')
+EXPR_CONTAINS_ANY_TYPE: Final = ErrorMessage('Expression type contains "Any" (has type {})')
+INCORRECTLY_RETURNING_ANY: Final = ErrorMessage(
+    "Returning Any from function declared to return {}", codes.NO_ANY_RETURN
+)
+INVALID_EXIT_RETURN_TYPE: Final = ErrorMessage(
+    '"bool" is invalid as return type for "__exit__" that always returns False', codes.EXIT_RETURN
+)
+UNTYPED_DECORATOR_FUNCTION: Final = ErrorMessage(
+    "Function is untyped after decorator transformation"
+)
+DECORATED_TYPE_CONTAINS_ANY: Final = ErrorMessage(
+    'Type of decorated function contains type "Any" ({})'
+)
+DECORATOR_MAKES_FUNCTION_UNTYPED: Final = ErrorMessage(
+    'Untyped decorator makes function "{}" untyped'
+)
+CONCRETE_ONLY_ASSIGN: Final = ErrorMessage(
+    "Can only assign concrete classes to a variable of type {}"
+)
+EXPECTED_CONCRETE_CLASS: Final = ErrorMessage(
+    "Only concrete class can be given where {} is expected"
+)
+CANNOT_USE_FUNCTION_WITH_TYPE: Final = ErrorMessage("Cannot use {}() with {} type")
+ISSUBCLASS_ONLY_NON_METHOD_PROTOCOL: Final = ErrorMessage(
+    "Only protocols that don't have non-method members can be used with issubclass()"
+)
+UNREACHABLE_STATEMENT: Final = ErrorMessage("Statement is unreachable", codes.UNREACHABLE)
+UNREACHABLE_RIGHT_OPERAND: Final = ErrorMessage(
+    'Right operand of "{}" is never evaluated', codes.UNREACHABLE
+)
+EXPR_IS_ALWAYS_BOOL: Final = ErrorMessage("{} is always {}", codes.REDUNDANT_EXPR)
+IMPOSSIBLE_SUBCLASS: Final = ErrorMessage("Subclass of {} cannot exist: would have {}")
 
 # Semantic Analysis
 METHOD_ATLEAST_ONE_ARG: Final = ErrorMessage('Method must have at least one argument')
@@ -281,7 +663,7 @@ MODULE_MISSING_ATTIRBUTE: Final = ErrorMessage(
 )
 NO_IMPLICIT_REEXPORT: Final = ErrorMessage(
     'Module "{}" does not explicitly export attribute "{}"; implicit reexport disabled',
-    codes.ATTR_DEFINED
+    codes.ATTR_DEFINED,
 )
 INCORRECT_RELATIVE_IMPORT: Final = ErrorMessage("Relative import climbs too many namespaces")
 INVALID_TYPE_ALIAS_TARGET: Final = ErrorMessage(
@@ -399,8 +781,10 @@ INVALID_STAR_EXPRESSION: Final = ErrorMessage(
 )
 YIELD_OUTSIDE_FUNC: Final = ErrorMessage('"yield" outside function')
 YIELD_FROM_OUTSIDE_FUNC: Final = ErrorMessage('"yield from" outside function')
+YIELD_IN_LISTCOMP_GENEXPR: Final = ErrorMessage('"yield" inside comprehension or generator expression')
 YIELD_IN_ASYNC_FUNC: Final = ErrorMessage('"yield" in async function')
 YIELD_FROM_IN_ASYNC_FUNC: Final = ErrorMessage('"yield from" in async function')
+YIELD_FROM_IN_LISTCOMP_GENEXPR: Final = ErrorMessage('"yield from" inside comprehension or generator expression')
 CAST_TARGET_IS_NOT_TYPE: Final = ErrorMessage('Cast target is not a type')
 ANY_CALL_UNSUPPORTED: Final = ErrorMessage(
     'Any(...) is no longer supported. Use cast(Any, ...) instead'
@@ -414,7 +798,7 @@ AWAIT_OUTSIDE_COROUTINE: Final = ErrorMessage('"await" outside coroutine ("async
 CANNOT_RESOLVE_NAME: Final = ErrorMessage('Cannot resolve {} "{}" (possible cyclic definition)')
 NAME_NOT_DEFINED: Final = ErrorMessage('Name "{}" is not defined', codes.NAME_DEFINED)
 NAME_ALREADY_DEFINED: Final = ErrorMessage('{} "{}" already defined{}', codes.NO_REDEF)
-
+UNSUPPORTED_CLASS_SCOPED_IMPORT: Final = ErrorMessage('Unsupported class scoped import')
 
 # Semantic Analysis: Enum
 ENUM_ATTRIBUTE_UNSUPPORTED: Final = ErrorMessage("Enum type as attribute is not supported")
@@ -629,6 +1013,10 @@ TYPE_ALIAS_ARG_COUNT_MISMATCH: Final = ErrorMessage(
 INVALID_TYPE_ALIAS: Final = ErrorMessage("Invalid type alias: expression is not a valid type")
 CANNOT_RESOLVE_TYPE: Final = ErrorMessage('Cannot resolve {} "{}" (possible cyclic definition)')
 UNION_SYNTAX_REQUIRES_PY310: Final = ErrorMessage("X | Y syntax for unions requires Python 3.10")
+NO_BASE_CLASS_AFTER_ENUM: Final = ErrorMessage('No base classes are allowed after "{}"')
+ENUM_MULTIPLE_DATA_MIXINS: Final = ErrorMessage(
+    'Only a single data type mixin is allowed for Enum subtypes, found extra "{}"'
+)
 
 # Super
 TOO_MANY_ARGS_FOR_SUPER: Final = ErrorMessage('Too many arguments for "super"')
@@ -667,10 +1055,15 @@ CANNOT_INHERIT_FROM_FINAL: Final = ErrorMessage('Cannot inherit from final class
 DEPENDENT_FINAL_IN_CLASS_BODY: Final = ErrorMessage(
     "Final name declared in class body cannot depend on type variables"
 )
-CANNOT_ACCESS_FINAL_INSTANCE_ATTR: Final = (
+CANNOT_ACCESS_FINAL_INSTANCE_ATTR: Final = ErrorMessage(
     'Cannot access final instance attribute "{}" on class object'
 )
 CANNOT_MAKE_DELETABLE_FINAL: Final = ErrorMessage("Deletable attribute cannot be final")
+
+# Enum
+ENUM_MEMBERS_ATTR_WILL_BE_OVERRIDEN: Final = ErrorMessage(
+    'Assigned "__members__" will be overriden by "Enum" internally'
+)
 
 # ClassVar
 CANNOT_OVERRIDE_INSTANCE_VAR: Final = ErrorMessage(
@@ -698,16 +1091,95 @@ ITERABLE_TYPE_EXPECTED: Final = ErrorMessage("Invalid type '{}' for *expr (itera
 TYPE_GUARD_POS_ARG_REQUIRED: Final = ErrorMessage("Type guard requires positional argument")
 
 # Match Statement
-MISSING_MATCH_ARGS: Final = 'Class "{}" doesn\'t define "__match_args__"'
-OR_PATTERN_ALTERNATIVE_NAMES: Final = "Alternative patterns bind different names"
-CLASS_PATTERN_GENERIC_TYPE_ALIAS: Final = (
+MISSING_MATCH_ARGS: Final = ErrorMessage('Class "{}" doesn\'t define "__match_args__"')
+OR_PATTERN_ALTERNATIVE_NAMES: Final = ErrorMessage("Alternative patterns bind different names")
+CLASS_PATTERN_GENERIC_TYPE_ALIAS: Final = ErrorMessage(
     "Class pattern class must not be a type alias with type parameters"
 )
-CLASS_PATTERN_TYPE_REQUIRED: Final = 'Expected type in class pattern; found "{}"'
-CLASS_PATTERN_TOO_MANY_POSITIONAL_ARGS: Final = "Too many positional patterns for class pattern"
-CLASS_PATTERN_KEYWORD_MATCHES_POSITIONAL: Final = (
+CLASS_PATTERN_TYPE_REQUIRED: Final = ErrorMessage('Expected type in class pattern; found "{}"')
+CLASS_PATTERN_TOO_MANY_POSITIONAL_ARGS: Final = ErrorMessage(
+    "Too many positional patterns for class pattern"
+)
+CLASS_PATTERN_KEYWORD_MATCHES_POSITIONAL: Final = ErrorMessage(
     'Keyword "{}" already matches a positional pattern'
 )
-CLASS_PATTERN_DUPLICATE_KEYWORD_PATTERN: Final = 'Duplicate keyword pattern "{}"'
-CLASS_PATTERN_UNKNOWN_KEYWORD: Final = 'Class "{}" has no attribute "{}"'
-MULTIPLE_ASSIGNMENTS_IN_PATTERN: Final = 'Multiple assignments to name "{}" in pattern'
+CLASS_PATTERN_DUPLICATE_KEYWORD_PATTERN: Final = ErrorMessage('Duplicate keyword pattern "{}"')
+CLASS_PATTERN_UNKNOWN_KEYWORD: Final = ErrorMessage('Class "{}" has no attribute "{}"')
+MULTIPLE_ASSIGNMENTS_IN_PATTERN: Final = ErrorMessage(
+    'Multiple assignments to name "{}" in pattern'
+)
+
+# Plugin: attrs
+CANNOT_DETERMINE_INIT_TYPE: Final = ErrorMessage("Cannot determine __init__ type from converter")
+CMP_WITH_EQ_AND_ORDER: Final = ErrorMessage('Don\'t mix "cmp" with "eq" and "order"')
+EQ_TRUE_IF_ORDER_TRUE: Final = ErrorMessage("eq must be True if order is True")
+ARG_MUST_BE_TRUE_OR_FALSE: Final = ErrorMessage('"{}" argument must be True or False.')
+AUTO_ATTRIBS_UNSUPPORTED_PY2: Final = ErrorMessage("auto_attribs is not supported in Python 2")
+ATTRS_NEWSTYLE_CLASS_ONLY: Final = ErrorMessage("attrs only works with new-style classes")
+KW_ONLY_UNSUPPORTED_PY2: Final = ErrorMessage("kw_only is not supported in Python 2")
+DEFAULT_WITH_FACTORY: Final = ErrorMessage('Can\'t pass both "default" and "factory".')
+TYPE_INVALID_ARG: Final = ErrorMessage("Invalid argument to type")
+NON_DEFAULT_ATTRS_AFTER_DEFAULT: Final = ErrorMessage(
+    "Non-default attributes not allowed after default attributes."
+)
+ATTR_TOO_MANY_NAMES: Final = ErrorMessage("Too many names for one attribute")
+CONVERT_WITH_CONVERTER: Final = ErrorMessage('Can\'t pass both "convert" and "converter".')
+CONVERT_DEPRECATED: Final = ErrorMessage("convert is deprecated, use converter")
+UNSUPPORTED_CONVERTER: Final = ErrorMessage(
+    "Unsupported converter, only named functions and types are currently supported"
+)
+
+# Plugin: functools
+TOTAL_ORDERING_NO_OPERATOR_DEFINED: Final = ErrorMessage(
+    'No ordering operation defined when using "functools.total_ordering": < > <= >='
+)
+
+# Plugin: dataclasses
+DATACLASS_ORDER_METHODS_DISALLOWED: Final = ErrorMessage(
+    "You may not have a custom {} method when order=True"
+)
+DATACLASS_DEFAULT_ATTRS_BEFORE_NON_DEFAULT: Final = ErrorMessage(
+    "Attributes without a default cannot follow attributes with one"
+)
+DATACLASS_SINGLE_KW_ONLY_TYPE: Final = ErrorMessage(
+    "There may not be more than one field with the KW_ONLY type"
+)
+DATACLASS_UNPACKING_KWARGS_IN_FIELD: Final = ErrorMessage(
+    'Unpacking **kwargs in "field()" is not supported'
+)
+DATACLASS_POS_ARG_IN_FIELD: Final = ErrorMessage('"field()" does not accept positional arguments')
+DATACLASS_SLOTS_ABOVE_PY310: Final = ErrorMessage(
+    'Keyword argument "slots" for "dataclass" is only valid in Python 3.10 and higher'
+)
+DATACLASS_SLOTS_CLASH: Final = ErrorMessage(
+    '"{}" both defines "__slots__" and is used with "slots=True"'
+)
+
+# Plugin: ctypes
+CTYPES_VALUE_WITH_CHAR_OR_WCHAR_ONLY: Final = ErrorMessage(
+    'Array attribute "value" is only available with element type "c_char" or "c_wchar", not {}'
+)
+CTYPES_RAW_WITH_CHAR_ONLY: Final = ErrorMessage(
+    'Array attribute "raw" is only available with element type "c_char", not {}'
+)
+CTYPES_INCOMPATIBLE_CONSTRUCTOR_ARG: Final = ErrorMessage(
+    "Array constructor argument {} of type {} is not convertible to the array element type {}"
+)
+
+# Plugin: singledispatch
+SINGLEDISPATCH_ATLEAST_ONE_ARG: Final = ErrorMessage(
+    "Singledispatch function requires at least one argument"
+)
+SINGLEDISPATCH_FIRST_ARG_POSITIONAL: Final = ErrorMessage(
+    "First argument to singledispatch function must be a positional argument"
+)
+DISPATCH_TYPE_FALLBACK_SUBTYPE: Final = ErrorMessage(
+    "Dispatch type {} must be subtype of fallback function first argument {}"
+)
+
+# misc/proper_plugin.py
+ISINSTANCE_ON_UNEXPANDED_TYPE: Final = ErrorMessage(
+    "Never apply isinstance() to unexpanded types; use mypy.types.get_proper_type() first"
+)
+REDUNDANT_GET_PROPER_TYPE: Final = ErrorMessage("Redundant call to get_proper_type()")
+CANNOT_MODIFY_MATCH_ARGS: Final = ErrorMessage('Cannot assign to "__match_args__"')

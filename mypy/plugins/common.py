@@ -1,11 +1,12 @@
 from typing import List, Optional, Union
 
+from mypy import message_registry
 from mypy.nodes import (
     ARG_POS, MDEF, Argument, Block, CallExpr, ClassDef, Expression, SYMBOL_FUNCBASE_TYPES,
     FuncDef, PassStmt, RefExpr, SymbolTableNode, Var, JsonDict,
 )
 from mypy.plugin import CheckerPluginInterface, ClassDefContext, SemanticAnalyzerPluginInterface
-from mypy.semanal import set_callable_name
+from mypy.semanal import set_callable_name, ALLOW_INCOMPATIBLE_OVERRIDE
 from mypy.types import (
     CallableType, Overloaded, Type, TypeVarType, deserialize_type, get_proper_type,
 )
@@ -39,7 +40,7 @@ def _get_bool_argument(ctx: ClassDefContext, expr: CallExpr,
     if attr_value:
         ret = ctx.api.parse_bool(attr_value)
         if ret is None:
-            ctx.api.fail('"{}" argument must be True or False.'.format(name), expr)
+            ctx.api.fail(message_registry.ARG_MUST_BE_TRUE_OR_FALSE.format(name), expr)
             return default
         return ret
     return default
@@ -162,6 +163,8 @@ def add_attribute_to_class(
         name: str,
         typ: Type,
         final: bool = False,
+        no_serialize: bool = False,
+        override_allow_incompatible: bool = False,
 ) -> None:
     """
     Adds a new attribute to a class definition.
@@ -179,8 +182,17 @@ def add_attribute_to_class(
     node = Var(name, typ)
     node.info = info
     node.is_final = final
+    if name in ALLOW_INCOMPATIBLE_OVERRIDE:
+        node.allow_incompatible_override = True
+    else:
+        node.allow_incompatible_override = override_allow_incompatible
     node._fullname = info.fullname + '.' + name
-    info.names[name] = SymbolTableNode(MDEF, node, plugin_generated=True)
+    info.names[name] = SymbolTableNode(
+        MDEF,
+        node,
+        plugin_generated=True,
+        no_serialize=no_serialize,
+    )
 
 
 def deserialize_and_fixup_type(

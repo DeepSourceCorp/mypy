@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from mypy.backports import OrderedDict
 
 from typing import (
-    Callable, List, Optional, Set, Tuple, Iterator, TypeVar, Iterable, Sequence, Union
+    Callable, List, Optional, Set, Tuple, Iterator, TypeVar, Iterable, Sequence
 )
 from typing_extensions import Final
 from mypy_extensions import DefaultNamedArg
@@ -14,7 +14,7 @@ from mypy_extensions import DefaultNamedArg
 from mypy.messages import MessageBuilder, quote_type_string, format_type_bare
 from mypy.options import Options
 from mypy.types import (
-    Type, UnboundType, TupleType, TypedDictType, UnionType, Instance, AnyType,
+    NEVER_NAMES, Type, UnboundType, TupleType, TypedDictType, UnionType, Instance, AnyType,
     CallableType, NoneType, ErasedType, DeletedType, TypeList, TypeVarType, SyntheticTypeVisitor,
     StarType, PartialType, EllipsisType, UninhabitedType, TypeType, CallableArgument,
     TypeQuery, union_items, TypeOfAny, LiteralType, RawExpressionType,
@@ -348,7 +348,7 @@ class TypeAnalyser(SyntheticTypeVisitor[Type], TypeAnalyzerPluginInterface):
                 self.fail(message_registry.CLASSVAR_ATMOST_ONE_TYPE_ARG, t)
                 return AnyType(TypeOfAny.from_error)
             return self.anal_type(t.args[0])
-        elif fullname in ('mypy_extensions.NoReturn', 'typing.NoReturn'):
+        elif fullname in NEVER_NAMES:
             return UninhabitedType(is_noreturn=True)
         elif fullname in LITERAL_TYPE_NAMES:
             return self.analyze_literal_type(t)
@@ -490,7 +490,12 @@ class TypeAnalyser(SyntheticTypeVisitor[Type], TypeAnalyzerPluginInterface):
             message = message_registry.VARIABLE_NOT_VALID_TYPE
         elif isinstance(sym.node, (SYMBOL_FUNCBASE_TYPES, Decorator)):
             message = message_registry.FUNCTION_NOT_VALID_TYPE
-            notes.append('Perhaps you need "Callable[...]" or a callback protocol?')
+            if name == 'builtins.any':
+                notes.append('Perhaps you meant "typing.Any" instead of "any"?')
+            elif name == 'builtins.callable':
+                notes.append('Perhaps you meant "typing.Callable" instead of "callable"?')
+            else:
+                notes.append('Perhaps you need "Callable[...]" or a callback protocol?')
         elif isinstance(sym.node, MypyFile):
             # TODO: suggest a protocol when supported.
             message = message_registry.MODULE_NOT_VALID_TYPE
@@ -927,8 +932,7 @@ class TypeAnalyser(SyntheticTypeVisitor[Type], TypeAnalyzerPluginInterface):
     def analyze_type(self, t: Type) -> Type:
         return t.accept(self)
 
-    # TODO(tushar): remove `str` type and `code` property from here
-    def fail(self, msg: Union[str, ErrorMessage], ctx: Context) -> None:
+    def fail(self, msg: ErrorMessage, ctx: Context) -> None:
         self.fail_func(msg, ctx)
 
     def note(self, msg: str, ctx: Context, *, code: Optional[ErrorCode] = None) -> None:
