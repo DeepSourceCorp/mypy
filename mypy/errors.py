@@ -414,7 +414,7 @@ class Errors:
             note = ErrorInfo(
                 info.import_ctx, info.file, info.module, info.type, info.function_or_member,
                 info.line, info.column, 'note', msg,
-                code=None, blocker=False, only_once=False, allow_dups=False
+                code=None, issue=None, blocker=False, only_once=False, allow_dups=False
             )
             self._add_error_info(file, note)
 
